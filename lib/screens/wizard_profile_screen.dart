@@ -1,0 +1,295 @@
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:warrior_path/screens/parent/add_child_screen.dart';
+import 'package:warrior_path/screens/student/school_search_screen.dart';
+import 'package:warrior_path/screens/wizard_create_school_screen.dart';
+import 'package:warrior_path/l10n/app_localizations.dart';
+import '../enums/user_role.dart';
+
+
+class WizardProfileScreen extends StatefulWidget {
+  final bool isExistingUser;
+
+  const WizardProfileScreen({Key? key, this.isExistingUser = false}) : super(key: key);
+
+  @override
+  _WizardProfileScreenState createState() => _WizardProfileScreenState();
+}
+
+class _WizardProfileScreenState extends State<WizardProfileScreen> {
+  late AppLocalizations l10n;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    l10n = AppLocalizations.of(context);
+  }
+
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _dobController = TextEditingController();
+
+  UserRole? _selectedRole;
+  File? _imageFile;
+  bool _isLoading = false;
+  String? _uid;
+
+  String? _selectedSex;
+  DateTime? _selectedDateOfBirth;
+
+  @override
+  void initState() {
+    super.initState();
+    _uid = FirebaseAuth.instance.currentUser?.uid;
+    if (widget.isExistingUser && _uid != null) {
+      _loadExistingUserData();
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _dobController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadExistingUserData() async {
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(_uid).get();
+    if (userDoc.exists && mounted) {
+      final data = userDoc.data()!;
+      setState(() {
+        _nameController.text = data['displayName'] ?? '';
+        _phoneController.text = data['phoneNumber'] ?? '';
+        _selectedSex = data['gender'];
+        _selectedDateOfBirth = (data['dateOfBirth'] as Timestamp?)?.toDate();
+        if (_selectedDateOfBirth != null) {
+          _dobController.text = DateFormat('dd/MM/yyyy', 'es_ES').format(_selectedDateOfBirth!);
+        }
+      });
+    }
+  }
+
+  void _updateRole(UserRole role) {
+    setState(() {
+      _selectedRole = role;
+    });
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 50);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> _selectDateOfBirth(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDateOfBirth ?? DateTime(2000),
+      firstDate: DateTime(1920),
+      lastDate: DateTime.now(),
+      locale: const Locale('es', 'ES'),
+    );
+    if (picked != null && picked != _selectedDateOfBirth) {
+      setState(() {
+        _selectedDateOfBirth = picked;
+        _dobController.text = DateFormat('dd/MM/yyyy', 'es_ES').format(picked);
+      });
+    }
+  }
+
+  Future<void> _saveAndContinue() async {
+    if (_nameController.text.trim().isEmpty || _selectedRole == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.nameAndMartialArtRequired)), // Texto localizado
+      );
+      return;
+    }
+    if (_uid == null) return;
+
+    setState(() { _isLoading = true; });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception(l10n.notAuthenticatedUser);
+
+      String? photoUrl;
+      if (_imageFile != null) {
+        final ref = FirebaseStorage.instance.ref().child('profile_pics').child('$_uid.jpg');
+        await ref.putFile(_imageFile!);
+        photoUrl = await ref.getDownloadURL();
+      }
+
+      final dataToUpdate = <String, dynamic>{
+        'displayName': _nameController.text.trim(),
+        'phoneNumber': _phoneController.text.trim(),
+        'role': _selectedRole.toString().split('.').last,
+        'wizardStep': 1,
+        'gender': _selectedSex,
+        'dateOfBirth': _selectedDateOfBirth,
+        'email': user.email,
+      };
+      if (photoUrl != null) {
+        dataToUpdate['photoUrl'] = photoUrl;
+      }
+
+      final userRef = FirebaseFirestore.instance.collection('users').doc(_uid);
+      await userRef.set(dataToUpdate, SetOptions(merge: true));
+
+      if (!mounted) return;
+
+      switch (_selectedRole) {
+        case UserRole.student:
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SchoolSearchScreen(isFromWizard: true)));
+          break;
+        case UserRole.teacher:
+        case UserRole.both:
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const WizardCreateSchoolScreen()));
+          break;
+        case UserRole.parent:
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AddChildScreen()));
+          break;
+        default:
+          break;
+      }
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.saveError(e.toString()))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() { _isLoading = false; });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.isExistingUser ? l10n.selectProfile : 'Completa tu Perfil (Paso 1)')),
+      body: AbsorbPointer(
+        absorbing: _isLoading,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 60,
+                      backgroundColor: Colors.grey.shade300,
+                      backgroundImage: _imageFile != null ? FileImage(_imageFile!) : null,
+                      child: _imageFile == null ? const Icon(Icons.person, size: 60, color: Colors.white) : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: IconButton(
+                        icon: const Icon(Icons.camera_alt),
+                        onPressed: _pickImage,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(labelText: l10n.fullName),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _phoneController,
+                decoration: InputDecoration(labelText: l10n.phone),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedSex,
+                decoration: InputDecoration(labelText: l10n.gender),
+                items: [
+                  DropdownMenuItem(value: 'masculino', child: Text(l10n.maleGender)),
+                  DropdownMenuItem(value: 'femenino', child: Text(l10n.femaleGender)),
+                  DropdownMenuItem(value: 'otro', child: Text(l10n.otherGender)),
+                  DropdownMenuItem(value: 'prefiero_no_decirlo', child: Text(l10n.noSpecifyGender)),
+                ],
+                onChanged: (value) => setState(() => _selectedSex = value),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _dobController,
+                decoration: InputDecoration(
+                  labelText: l10n.birdthDate,
+                  suffixIcon: const Icon(Icons.calendar_today),
+                ),
+                readOnly: true,
+                onTap: () => _selectDateOfBirth(context),
+              ),
+              const SizedBox(height: 24),
+              Text('¿Cómo quieres empezar? *', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+
+              SegmentedButton<UserRole>(
+                style: ButtonStyle(padding: WidgetStateProperty.all<EdgeInsets>(const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0))),
+                segments: <ButtonSegment<UserRole>>[
+                  ButtonSegment<UserRole>(
+                    value: UserRole.student,
+                    label: Column(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.school, size: 20), const SizedBox(height: 4), Text(l10n.student, style: const TextStyle(fontSize: 12))]),
+                  ),
+                  ButtonSegment<UserRole>(
+                    value: UserRole.teacher,
+                    label: Column(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.sports_kabaddi, size: 20), const SizedBox(height: 4), Text(l10n.teacher, style: const TextStyle(fontSize: 12))]),
+                  ),
+                  ButtonSegment<UserRole>(
+                    value: UserRole.parent,
+                    label: Column(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.family_restroom, size: 20), const SizedBox(height: 4), Text(l10n.iAmAParent, style: const TextStyle(fontSize: 12))]),
+                  ),
+                ],
+                selected: _selectedRole != null ? <UserRole>{_selectedRole!} : <UserRole>{},
+                onSelectionChanged: (Set<UserRole> newSelection) {
+                  if (newSelection.isNotEmpty) {
+                    _updateRole(newSelection.first);
+                  }
+                },
+                emptySelectionAllowed: true,
+                showSelectedIcon: false,
+              ),
+              const SizedBox(height: 16),
+              if (_selectedRole == UserRole.teacher || _selectedRole == UserRole.both)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
+                  child: const Text('Al elegir "Profesor" o "Ambos", el siguiente paso será crear tu propia escuela.', textAlign: TextAlign.center), // TODO: Localizar
+                ),
+              if (_selectedRole == UserRole.parent)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
+                  child: Text(l10n.parentFlowDescription, textAlign: TextAlign.center),
+                ),
+              const SizedBox(height: 32),
+              if (_isLoading)
+                const Center(child: CircularProgressIndicator())
+              else
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                  onPressed: _saveAndContinue,
+                  child: Text(l10n.saveAndContinue),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
