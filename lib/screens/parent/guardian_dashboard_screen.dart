@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:warrior_path/models/user_model.dart';
-import 'package:warrior_path/providers/session_provider.dart';
-import 'package:warrior_path/screens/parent/add_child_screen.dart';
-import 'package:warrior_path/screens/role_selector_screen.dart';
+import 'package:toko/models/user_model.dart';
+import 'package:toko/providers/session_provider.dart';
+import 'package:toko/screens/parent/add_child_screen.dart';
+import 'package:toko/screens/role_selector_screen.dart';
 
 import '../../l10n/app_localizations.dart';
 

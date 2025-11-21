@@ -1,4 +1,4 @@
-package com.warriorpath.app
+package com.toko.app
 
 import io.flutter.embedding.android.FlutterActivity
 

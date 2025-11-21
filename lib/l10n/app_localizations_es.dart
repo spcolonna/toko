@@ -9,7 +9,7 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
-  String get appName => 'Warrior Path';
+  String get appName => 'Toko';
 
   @override
   String get appSlogan => 'Sé un guerrero, crea tu camino';
@@ -352,7 +352,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get contactAdmin => 'Contactar al Administrador';
 
   @override
-  String get renewalSubject => 'Renovación de Suscripción - Warrior Path';
+  String get renewalSubject => 'Renovación de Suscripción - Toko';
 
   @override
   String get mailError => 'No se pudo abrir la aplicación de correo.';

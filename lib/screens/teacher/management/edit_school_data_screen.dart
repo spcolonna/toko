@@ -5,8 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:warrior_path/models/discipline_model.dart';
-import 'package:warrior_path/theme/martial_art_themes.dart';
+import 'package:toko/models/discipline_model.dart';
+import 'package:toko/theme/martial_art_themes.dart';
 
 class EditSchoolDataScreen extends StatefulWidget {
   final String schoolId;

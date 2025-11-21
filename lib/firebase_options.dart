@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '891576872027',
     projectId: 'warriorpath-89a85',
     storageBucket: 'warriorpath-89a85.firebasestorage.app',
-    iosBundleId: 'com.warriorpath.app',
+    iosBundleId: 'com.toko.app',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '891576872027',
     projectId: 'warriorpath-89a85',
     storageBucket: 'warriorpath-89a85.firebasestorage.app',
-    iosBundleId: 'com.example.matchhouseFlutter',
+    iosBundleId: 'com.example.toko',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

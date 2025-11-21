@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:warrior_path/providers/session_provider.dart';
-import 'package:warrior_path/screens/schedule/schedule_management_screen.dart';
-import 'package:warrior_path/screens/teacher/events/event_management_screen.dart';
-import 'package:warrior_path/screens/teacher/management/edit_school_data_screen.dart';
-import 'package:warrior_path/screens/teacher/management/finance_management_screen.dart';
+import 'package:toko/providers/session_provider.dart';
+import 'package:toko/screens/schedule/schedule_management_screen.dart';
+import 'package:toko/screens/teacher/events/event_management_screen.dart';
+import 'package:toko/screens/teacher/management/edit_school_data_screen.dart';
+import 'package:toko/screens/teacher/management/finance_management_screen.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../teacher/curriculum/curriculum_hub_screen.dart';

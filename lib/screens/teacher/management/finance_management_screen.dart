@@ -5,7 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:warrior_path/models/payment_plan_model.dart';
+import 'package:toko/models/payment_plan_model.dart';
 
 class FinanceManagementScreen extends StatefulWidget {
   final String schoolId;

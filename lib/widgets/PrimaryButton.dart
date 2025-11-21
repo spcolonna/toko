@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:warrior_path/theme/AppColors.dart';
+import 'package:toko/theme/AppColors.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;

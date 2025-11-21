@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:warrior_path/screens/teacher/curriculum/discipline_detail_screen.dart';
-import 'package:warrior_path/theme/martial_art_themes.dart';
+import 'package:toko/screens/teacher/curriculum/discipline_detail_screen.dart';
+import 'package:toko/theme/martial_art_themes.dart';
 
 import '../../../l10n/app_localizations.dart';
 

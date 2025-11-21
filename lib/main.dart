@@ -1,15 +1,15 @@
 import 'package:provider/provider.dart';
-import 'package:warrior_path/providers/locale_provider.dart';
-import 'package:warrior_path/providers/session_provider.dart';
-import 'package:warrior_path/providers/theme_provider.dart';
-import 'package:warrior_path/services/notification_service.dart';
-import 'package:warrior_path/services/remote_config_service.dart';
+import 'package:toko/providers/locale_provider.dart';
+import 'package:toko/providers/session_provider.dart';
+import 'package:toko/providers/theme_provider.dart';
+import 'package:toko/services/notification_service.dart';
+import 'package:toko/services/remote_config_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:warrior_path/widgets/ad_banner_widget.dart';
-import 'package:warrior_path/screens/WelcomeScreen.dart';
+import 'package:toko/widgets/ad_banner_widget.dart';
+import 'package:toko/screens/WelcomeScreen.dart';
 
 import 'l10n/app_localizations.dart';
 
@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
         return Consumer<LocaleProvider>(
           builder: (context, localeProvider, child) {
             return MaterialApp(
-              title: 'Warrior Path',
+              title: 'Toko',
               theme: ThemeData(
                 primarySwatch: Colors.blue,
                 primaryColor: themeProvider.theme.primaryColor,

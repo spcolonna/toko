@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:warrior_path/screens/WelcomeScreen.dart';
-import 'package:warrior_path/screens/student/school_search_screen.dart';
-import 'package:warrior_path/screens/wizard_create_school_screen.dart';
+import 'package:toko/screens/WelcomeScreen.dart';
+import 'package:toko/screens/student/school_search_screen.dart';
+import 'package:toko/screens/wizard_create_school_screen.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../parent/add_child_screen.dart';
 

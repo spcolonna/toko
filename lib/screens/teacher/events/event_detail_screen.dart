@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:warrior_path/models/event_model.dart';
-import 'package:warrior_path/screens/teacher/events/add_edit_event_screen.dart';
-import 'package:warrior_path/screens/teacher/events/invite_students_screen.dart';
+import 'package:toko/models/event_model.dart';
+import 'package:toko/screens/teacher/events/add_edit_event_screen.dart';
+import 'package:toko/screens/teacher/events/invite_students_screen.dart';
 
 import '../../../l10n/app_localizations.dart';
 

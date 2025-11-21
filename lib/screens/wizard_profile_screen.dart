@@ -5,10 +5,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:warrior_path/screens/parent/add_child_screen.dart';
-import 'package:warrior_path/screens/student/school_search_screen.dart';
-import 'package:warrior_path/screens/wizard_create_school_screen.dart';
-import 'package:warrior_path/l10n/app_localizations.dart';
+import 'package:toko/screens/parent/add_child_screen.dart';
+import 'package:toko/screens/student/school_search_screen.dart';
+import 'package:toko/screens/wizard_create_school_screen.dart';
+import 'package:toko/l10n/app_localizations.dart';
 import '../enums/user_role.dart';
 
 

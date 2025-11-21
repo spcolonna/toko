@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:warrior_path/models/level_model.dart';
+import 'package:toko/models/level_model.dart';
 import '../l10n/app_localizations.dart';
 
 class WizardConfigureLevelsScreen extends StatefulWidget {

@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:warrior_path/screens/WelcomeScreen.dart';
-import 'package:warrior_path/screens/student/school_search_screen.dart';
+import 'package:toko/screens/WelcomeScreen.dart';
+import 'package:toko/screens/student/school_search_screen.dart';
 
 class ApplicationSentScreen extends StatelessWidget {
   final String schoolName;

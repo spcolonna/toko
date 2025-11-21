@@ -9,7 +9,7 @@ class AppLocalizationsPt extends AppLocalizations {
   AppLocalizationsPt([String locale = 'pt']) : super(locale);
 
   @override
-  String get appName => 'Warrior Path';
+  String get appName => 'Toko';
 
   @override
   String get appSlogan => 'Seja um guerreiro, crie seu caminho';
@@ -354,7 +354,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get contactAdmin => 'Contatar Administrador';
 
   @override
-  String get renewalSubject => 'Renovação de Assinatura - Warrior Path';
+  String get renewalSubject => 'Renovação de Assinatura - Toko';
 
   @override
   String get mailError => 'Não foi possível abrir o aplicativo de e-mail.';

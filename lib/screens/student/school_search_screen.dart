@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:warrior_path/providers/session_provider.dart';
-import 'package:warrior_path/screens/student/application_sent_screen.dart';
+import 'package:toko/providers/session_provider.dart';
+import 'package:toko/screens/student/application_sent_screen.dart';
 
 import '../../l10n/app_localizations.dart';
 

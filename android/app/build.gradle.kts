@@ -18,7 +18,7 @@ val flutterVersionCode: String = localProperties.getProperty("flutter.versionCod
 val flutterVersionName: String = localProperties.getProperty("flutter.versionName") ?: "1.0"
 
 android {
-    namespace = "com.warriorpath.app"
+    namespace = "com.toko.app"
     compileSdk = 35
     ndkVersion = "27.0.12077973"
 
@@ -31,7 +31,7 @@ android {
     // --------------------------------------------------------
 
     defaultConfig {
-        applicationId = "com.warriorpath.app"
+        applicationId = "com.toko.app"
         minSdk = flutter.minSdkVersion
         targetSdk = 35
         versionCode = flutterVersionCode.toInt()

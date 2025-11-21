@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:warrior_path/models/event_model.dart';
+import 'package:toko/models/event_model.dart';
 
 import '../../l10n/app_localizations.dart';
 

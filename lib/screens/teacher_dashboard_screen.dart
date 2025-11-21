@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:warrior_path/providers/session_provider.dart';
-import 'package:warrior_path/providers/theme_provider.dart';
-import 'package:warrior_path/screens/subscription_lapsed_screen.dart';
+import 'package:toko/providers/session_provider.dart';
+import 'package:toko/providers/theme_provider.dart';
+import 'package:toko/screens/subscription_lapsed_screen.dart';
 
 import '../l10n/app_localizations.dart';
 import 'dashboard/tabs/home_tab_screen.dart';

@@ -1,6 +1,6 @@
 {
     "@@locale": "es",
-    "appName": "Warrior Path",
+    "appName": "Toko",
     "appSlogan": "Sé un guerrero, crea tu camino",
     "emailLabel": "Correo Electrónico",
     "loginButton": "Iniciar Sesión",
@@ -104,7 +104,7 @@
     "subscriptionExpired": "Suscripción Vencida",
     "subscriptionExpiredMessage": "Tu acceso a las herramientas de maestro ha sido pausado. Para renovar tu suscripción y reactivar tu cuenta, por favor, contacta al administrador.",
     "contactAdmin": "Contactar al Administrador",
-    "renewalSubject": "Renovación de Suscripción - Warrior Path",
+    "renewalSubject": "Renovación de Suscripción - Toko",
     "mailError": "No se pudo abrir la aplicación de correo.",
     "mailLaunchError": "Error al intentar abrir el correo: {e}",
     "nameAndMartialArtRequired": "Nombre y Arte Marcial son requeridos.",

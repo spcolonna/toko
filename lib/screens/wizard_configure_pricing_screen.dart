@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:warrior_path/models/payment_plan_model.dart';
-import 'package:warrior_path/screens/wizard_review_screen.dart';
+import 'package:toko/models/payment_plan_model.dart';
+import 'package:toko/screens/wizard_review_screen.dart';
 
 import '../l10n/app_localizations.dart';
 

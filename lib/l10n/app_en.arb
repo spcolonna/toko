@@ -1,6 +1,6 @@
 {
     "@@locale": "en",
-    "appName": "Warrior Path",
+    "appName": "Toko",
     "appSlogan": "Be a warrior, create your path",
     "emailLabel": "Email",
     "loginButton": "Log In",
@@ -117,7 +117,7 @@
     "subscriptionExpired": "Subscription Expired",
     "subscriptionExpiredMessage": "Your access to teacher tools has been paused. To renew your subscription and reactivate your account, please contact the administrator.",
     "contactAdmin": "Contact Administrator",
-    "renewalSubject": "Subscription Renewal - Warrior Path",
+    "renewalSubject": "Subscription Renewal - Toko",
     "mailError": "Could not open mail application.",
     "mailLaunchError": "Error trying to open mail: {e}",
     "@mailLaunchError": { "placeholders": { "e": { "type": "String" } } },

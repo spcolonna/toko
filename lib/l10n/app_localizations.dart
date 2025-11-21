@@ -103,7 +103,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'Warrior Path'**
+  /// **'Toko'**
   String get appName;
 
   /// No description provided for @appSlogan.
@@ -727,7 +727,7 @@ abstract class AppLocalizations {
   /// No description provided for @renewalSubject.
   ///
   /// In en, this message translates to:
-  /// **'Subscription Renewal - Warrior Path'**
+  /// **'Subscription Renewal - Toko'**
   String get renewalSubject;
 
   /// No description provided for @mailError.

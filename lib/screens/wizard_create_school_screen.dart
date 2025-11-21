@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:warrior_path/models/school_model.dart';
-import 'package:warrior_path/screens/wizard_discipline_hub_screen.dart';
-import 'package:warrior_path/theme/martial_art_themes.dart';
+import 'package:toko/models/school_model.dart';
+import 'package:toko/screens/wizard_discipline_hub_screen.dart';
+import 'package:toko/theme/martial_art_themes.dart';
 import '../l10n/app_localizations.dart';
 
 class WizardCreateSchoolScreen extends StatefulWidget {

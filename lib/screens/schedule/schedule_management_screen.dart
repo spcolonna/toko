@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:warrior_path/screens/schedule/add_edit_schedule_screen.dart';
+import 'package:toko/screens/schedule/add_edit_schedule_screen.dart';
 
 import '../../l10n/app_localizations.dart';
 

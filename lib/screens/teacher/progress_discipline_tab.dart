@@ -4,7 +4,7 @@ import 'package:confetti/confetti.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:warrior_path/screens/teacher/techniques/assign_techniques_screen.dart';
+import 'package:toko/screens/teacher/techniques/assign_techniques_screen.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/discipline_model.dart';
 import '../../models/level_model.dart';

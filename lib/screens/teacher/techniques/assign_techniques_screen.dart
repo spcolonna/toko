@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:warrior_path/models/technique_model.dart';
+import 'package:toko/models/technique_model.dart';
 
 import '../../../l10n/app_localizations.dart';
 

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:warrior_path/models/level_model.dart'; // Asegúrate que la ruta a tu modelo sea correcta
+import 'package:toko/models/level_model.dart'; // Asegúrate que la ruta a tu modelo sea correcta
 
 class LevelManagementScreen extends StatefulWidget {
   final String schoolId;

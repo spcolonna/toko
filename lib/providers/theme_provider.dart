@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:warrior_path/theme/martial_art_themes.dart';
+import 'package:toko/theme/martial_art_themes.dart';
 
 class ThemeProvider with ChangeNotifier {
   MartialArtTheme _currentTheme = MartialArtTheme.karate;

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:warrior_path/models/technique_model.dart';
-import 'package:warrior_path/l10n/app_localizations.dart';
+import 'package:toko/models/technique_model.dart';
+import 'package:toko/l10n/app_localizations.dart';
 
 class TechniqueManagementScreen extends StatefulWidget {
   final String schoolId;
