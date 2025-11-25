@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:toko/theme/AppColors.dart';
 
+import 'Band/band_metrics_screen.dart';
 import 'Band/band_profile_screen.dart';
 
 // --- Placeholder/Clases de Sub-pantallas ---
@@ -15,14 +16,6 @@ class BandEventsManagerScreen extends StatelessWidget {
   }
 }
 
-class BandMetricsScreen extends StatelessWidget {
-  final String bandId;
-  const BandMetricsScreen({super.key, required this.bandId});
-  @override
-  Widget build(BuildContext context) {
-    return Center(child: Text('3. Métricas y Estadísticas para $bandId', style: const TextStyle(color: AppColors.textWhite)));
-  }
-}
 // ---------------------------------------------
 
 class MyBandScreen extends StatelessWidget {

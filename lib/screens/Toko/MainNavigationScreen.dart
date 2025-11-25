@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:toko/theme/AppColors.dart';
-import 'band_screen.dart';
+import 'bands_screen.dart';
 import 'event_screen.dart';
 import 'match_screen.dart';
 import 'my_band_screen.dart';
@@ -19,10 +19,9 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
 
-  // Lista de Widgets de las pantallas (MiBandScreen es la pestaña 4, índice 4)
   final List<Widget> _widgetOptions = const <Widget>[
     EventScreen(),
-    BandScreen(),
+    BandsScreen(),
     MyScheduleScreen(),
     MatchScreen(),
     MyBandScreen(), // MyBandScreen es la pestaña 4 (índice 4)
