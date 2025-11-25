@@ -267,5 +267,7 @@
 		<false/>
 		<key>GADApplicationIdentifier</key>
 		<string>ca-app-pub-9552343552775183~8047903953</string>
+		<key>FirebaseAutomaticGenerationEnabled</key>
+        <false/>
 	</dict>
 </plist>

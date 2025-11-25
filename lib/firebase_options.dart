@@ -51,17 +51,17 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyB-8Uj9ycOFdyk2D3drrKnPa3ps3FHytvY',
-    appId: '1:891576872027:android:c0b199ef6daf889757237e',
-    messagingSenderId: '891576872027',
+    apiKey: 'AIzaSyC67FXBNnDek7DhhYSQK0df9wctx0l_kM8',
+    appId: '1:657051316118:android:e44122bb5ced3c84b6f7b7',
+    messagingSenderId: '657051316118',
     projectId: 'toko-113ff',
     storageBucket: 'toko-113ff.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBs6GoKFjmhUDCol364okgZ7lO_D_1AKuc',
-    appId: '1:891576872027:ios:4fb588ba51f79f8e57237e',
-    messagingSenderId: '891576872027',
+    apiKey: 'AIzaSyC5HYU6C9OgUJJGYIX0hFefwd38mjIlhjo',
+    appId: '1:657051316118:ios:c00b6f9749d34e0fb6f7b7',
+    messagingSenderId: '657051316118',
     projectId: 'toko-113ff',
     storageBucket: 'toko-113ff.firebasestorage.app',
     iosBundleId: 'com.toko.app',
