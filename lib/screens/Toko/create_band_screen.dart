@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Necesario para formatear la fecha
+
 import 'package:toko/theme/AppColors.dart';
 import 'package:toko/widgets/CustomInputField.dart';
 import 'package:toko/widgets/SecondaryButton.dart';
@@ -17,10 +19,17 @@ class _CreateBandScreenState extends State<CreateBandScreen> {
   final _nameController = TextEditingController();
   final _cityController = TextEditingController();
   final _bioController = TextEditingController();
+  final _emailController = TextEditingController(); // NUEVO: Email de Contacto
+  final _socialsController = TextEditingController(); // NUEVO: Links Sociales
 
-  // Lista de géneros disponibles (puedes expandirla luego)
+  DateTime? _dateFounded; // NUEVO: Fecha de Fundación (Fecha de nacimiento de la banda)
+
   final List<String> _availableGenres = ['Rock', 'Pop', 'Indie', 'Metal', 'Cumbia', 'Jazz', 'Electrónica'];
   Set<String> _selectedGenres = {};
+
+  // Roles disponibles para el miembro creador
+  final List<String> _availableRoles = ['Vocalist', 'Guitarist', 'Bassist', 'Drummer', 'Keyboardist', 'Manager'];
+  String? _selectedMemberRole; // Rol que se auto-asigna el creador
 
   bool _isLoading = false;
 
@@ -29,17 +38,46 @@ class _CreateBandScreenState extends State<CreateBandScreen> {
     _nameController.dispose();
     _cityController.dispose();
     _bioController.dispose();
+    _emailController.dispose();
+    _socialsController.dispose();
     super.dispose();
   }
 
-  // --- LÓGICA DE CREACIÓN EN FIREBASE ---
+  Future<void> _pickDateFounded() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _dateFounded ?? DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primaryColor, // Color principal del Picker
+              onPrimary: AppColors.textWhite,
+              surface: AppColors.backgroundDark, // Fondo
+              onSurface: AppColors.textWhite,
+            ),
+            dialogBackgroundColor: AppColors.backgroundDark,
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (pickedDate != null) {
+      setState(() {
+        _dateFounded = pickedDate;
+      });
+    }
+  }
+
   Future<void> _createBand() async {
     final l10n = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null || _isLoading) return;
 
-    if (_nameController.text.isEmpty || _selectedGenres.isEmpty || _cityController.text.isEmpty) {
+    if (_nameController.text.isEmpty || _selectedGenres.isEmpty || _cityController.text.isEmpty || _dateFounded == null || _selectedMemberRole == null) {
       _showErrorDialog(l10n.errorTitle, l10n.bandCreationErrorMissingFields);
       return;
     }
@@ -49,17 +87,17 @@ class _CreateBandScreenState extends State<CreateBandScreen> {
     try {
       final bandRef = FirebaseFirestore.instance.collection('bands');
 
-      // 1. Crear el documento de la banda
       final newBand = {
         'name': _nameController.text.trim(),
         'city': _cityController.text.trim(),
         'bio': _bioController.text.trim(),
+        'contactEmail': _emailController.text.trim(), // Guardado
+        'socialLinks': _socialsController.text.trim(), // Guardado (Podría ser un mapa luego)
+        'dateFounded': Timestamp.fromDate(_dateFounded!), // Guardado
         'genres': _selectedGenres.toList(),
         'createdAt': FieldValue.serverTimestamp(),
-        'ownerUid': user.uid, // El creador es el propietario
-        'members': {
-          user.uid: {'role': 'Manager', 'instrument': 'Vocalista/Músico', 'joinedAt': FieldValue.serverTimestamp()}
-        },
+        'ownerUid': user.uid,
+        'members': {},
         'followersCount': 0,
         'eventsCount': 0,
       };
@@ -67,18 +105,13 @@ class _CreateBandScreenState extends State<CreateBandScreen> {
       final newBandDoc = await bandRef.add(newBand);
       final bandId = newBandDoc.id;
 
-      // 2. Actualizar el perfil del usuario en Firestore (users collection)
-      // Indica que el usuario ya tiene una banda y guarda el ID
       await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
         'hasBand': true,
         'managedBandId': bandId,
-        'mainBandId': bandId, // ID de la banda principal a la que pertenece
+        'mainBandId': bandId,
       });
 
-      // 3. Navegación exitosa: Volver a la pantalla principal
       if (mounted) {
-        // En un escenario real, deberías actualizar el estado global del usuario (Provider)
-        // y luego navegar. Por ahora, simplemente cerramos la pantalla.
         Navigator.of(context).pop();
       }
 
@@ -90,7 +123,6 @@ class _CreateBandScreenState extends State<CreateBandScreen> {
   }
 
   void _showErrorDialog(String title, String content) {
-    // ... (función de diálogo de error, la puedes copiar de WelcomeScreen)
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
     showDialog(context: context, builder: (ctx) => AlertDialog(
@@ -110,9 +142,9 @@ class _CreateBandScreenState extends State<CreateBandScreen> {
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
-        title: Text(l10n.createBandTitle, style: TextStyle(color: AppColors.textWhite)),
+        title: Text(l10n.createBandTitle, style: const TextStyle(color: AppColors.textWhite)),
         backgroundColor: AppColors.backgroundDark,
-        iconTheme: IconThemeData(color: AppColors.textWhite),
+        iconTheme: const IconThemeData(color: AppColors.textWhite),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -120,36 +152,82 @@ class _CreateBandScreenState extends State<CreateBandScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. INPUT: Nombre de la Banda
-            CustomInputField(
-              controller: _nameController,
-              labelText: l10n.bandNameLabel,
-              icon: Icons.group_outlined,
+            CustomInputField(controller: _nameController, labelText: l10n.bandNameLabel, icon: Icons.group_outlined),
+            const SizedBox(height: 24),
+
+            // NUEVO: Fecha de Fundación de la Banda
+            GestureDetector(
+              onTap: _pickDateFounded,
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: l10n.dateFoundedLabel,
+                  labelStyle: const TextStyle(color: AppColors.textSecondary),
+                  prefixIcon: const Icon(Icons.cake_outlined, color: AppColors.textSecondary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.5)),
+                  ),
+                ),
+                child: Text(
+                  _dateFounded == null
+                      ? l10n.dateFoundedPlaceholder
+                      : DateFormat.yMMMd().format(_dateFounded!),
+                  style: const TextStyle(color: AppColors.textWhite, fontSize: 16),
+                ),
+              ),
             ),
             const SizedBox(height: 24),
 
-            // 2. INPUT: Ciudad
-            CustomInputField(
-              controller: _cityController,
-              labelText: l10n.cityLabel,
-              icon: Icons.location_city_outlined,
+            CustomInputField(controller: _cityController, labelText: l10n.cityLabel, icon: Icons.location_city_outlined),
+            const SizedBox(height: 24),
+            CustomInputField(controller: _bioController, labelText: l10n.bioLabel, icon: Icons.info_outline, maxLines: 4),
+            const SizedBox(height: 24),
+
+            // NUEVO: Email de Contacto
+            CustomInputField(controller: _emailController, labelText: l10n.contactEmailLabel, icon: Icons.email_outlined),
+            const SizedBox(height: 24),
+
+            // NUEVO: Links Sociales
+            CustomInputField(controller: _socialsController, labelText: l10n.socialLinksLabel, icon: Icons.link_outlined),
+            const SizedBox(height: 24),
+
+            // NUEVO: Rol del Creador (Autoclasificación como primer miembro)
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                labelText: l10n.yourRoleLabel,
+                labelStyle: const TextStyle(color: AppColors.textSecondary),
+                prefixIcon: const Icon(Icons.mic_none, color: AppColors.textSecondary),
+                filled: true,
+                fillColor: AppColors.backgroundDark,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.5)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.primaryColor, width: 2),
+                ),
+              ),
+              dropdownColor: AppColors.backgroundDark,
+              style: const TextStyle(color: AppColors.textWhite),
+              value: _selectedMemberRole,
+              items: _availableRoles.map((role) {
+                return DropdownMenuItem(
+                  value: role,
+                  child: Text(role),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedMemberRole = value;
+                });
+              },
             ),
             const SizedBox(height: 24),
 
-            // 3. INPUT: Biografía
-            CustomInputField(
-              controller: _bioController,
-              labelText: l10n.bioLabel,
-              icon: Icons.info_outline,
-              maxLines: 4,
-            ),
-            const SizedBox(height: 24),
-
-            // 4. SELECCIÓN DE GÉNEROS (Chips)
-            Text(
-              l10n.selectGenresLabel,
-              style: TextStyle(color: AppColors.textWhite, fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+            // SELECCIÓN DE GÉNEROS
+            Text(l10n.selectGenresLabel, style: const TextStyle(color: AppColors.textWhite, fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8.0,
@@ -162,15 +240,17 @@ class _CreateBandScreenState extends State<CreateBandScreen> {
                     color: isSelected ? AppColors.textWhite : AppColors.textSecondary,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
-                  backgroundColor: isSelected ? AppColors.primaryColor : AppColors.secondaryColor.withOpacity(0.5),
+                  backgroundColor: isSelected ? AppColors.primaryColor : Colors.transparent,
+                  side: BorderSide(color: isSelected ? AppColors.primaryColor : AppColors.secondaryColor),
                   onPressed: () {
                     setState(() {
                       if (isSelected) {
                         _selectedGenres.remove(genre);
                       } else {
-                        _selectedGenres.add(genre);
+                        if (_selectedGenres.length < 3) { _selectedGenres.add(genre); }
                       }
                     });
+                    FocusScope.of(context).unfocus();
                   },
                 );
               }).toList(),
@@ -178,11 +258,9 @@ class _CreateBandScreenState extends State<CreateBandScreen> {
 
             const SizedBox(height: 48),
 
-            // 5. BOTÓN DE CREACIÓN
+            // BOTÓN DE CREACIÓN
             _isLoading
-                ? Center(
-                child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryColor))
-            )
+                ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryColor)))
                 : SecondaryButton(
               text: l10n.createBandButton,
               onPressed: _createBand,

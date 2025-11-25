@@ -142,6 +142,72 @@ abstract class AppLocalizations {
   /// **'¿Olvidaste tu contraseña?'**
   String get forgotPasswordLink;
 
+  /// No description provided for @createBandTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea tu Banda'**
+  String get createBandTitle;
+
+  /// No description provided for @bandNameLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre de la banda'**
+  String get bandNameLabel;
+
+  /// No description provided for @cityLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Ciudad (Ej: Buenos Aires)'**
+  String get cityLabel;
+
+  /// No description provided for @bioLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Biografía de la banda'**
+  String get bioLabel;
+
+  /// No description provided for @selectGenresLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona los géneros (máx. 3)'**
+  String get selectGenresLabel;
+
+  /// No description provided for @createBandButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear mi Banda'**
+  String get createBandButton;
+
+  /// No description provided for @contactEmailLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Email de Contacto'**
+  String get contactEmailLabel;
+
+  /// No description provided for @socialLinksLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Links Sociales (URL de Spotify, YouTube, etc.)'**
+  String get socialLinksLabel;
+
+  /// No description provided for @dateFoundedLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha de Fundación (Nacimiento de la Banda)'**
+  String get dateFoundedLabel;
+
+  /// No description provided for @dateFoundedPlaceholder.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar fecha'**
+  String get dateFoundedPlaceholder;
+
+  /// No description provided for @yourRoleLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu Rol en la Banda (Rol principal)'**
+  String get yourRoleLabel;
+
   /// No description provided for @errorTitle.
   ///
   /// In es, this message translates to:
@@ -202,46 +268,10 @@ abstract class AppLocalizations {
   /// **'Aceptar'**
   String get ok;
 
-  /// No description provided for @createBandTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Crea tu Banda'**
-  String get createBandTitle;
-
-  /// No description provided for @bandNameLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Nombre de la banda'**
-  String get bandNameLabel;
-
-  /// No description provided for @cityLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Ciudad (Ej: Buenos Aires)'**
-  String get cityLabel;
-
-  /// No description provided for @bioLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Biografía de la banda'**
-  String get bioLabel;
-
-  /// No description provided for @selectGenresLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Selecciona los géneros (máx. 3)'**
-  String get selectGenresLabel;
-
-  /// No description provided for @createBandButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Crear mi Banda'**
-  String get createBandButton;
-
   /// No description provided for @bandCreationErrorMissingFields.
   ///
   /// In es, this message translates to:
-  /// **'Por favor, completa el nombre, la ciudad y selecciona al menos un género.'**
+  /// **'Por favor, completa el nombre, la ciudad, la fecha de fundación y tu rol.'**
   String get bandCreationErrorMissingFields;
 }
 

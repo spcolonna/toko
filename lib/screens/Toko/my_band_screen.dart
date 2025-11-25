@@ -1,10 +1,29 @@
-// my_band_screen.dart (Contenido del Tab 5)
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:toko/theme/AppColors.dart';
-import 'create_band_screen.dart'; // Importamos la nueva pantalla
+
+import 'Band/band_profile_screen.dart';
+
+// --- Placeholder/Clases de Sub-pantallas ---
+class BandEventsManagerScreen extends StatelessWidget {
+  final String bandId;
+  const BandEventsManagerScreen({super.key, required this.bandId});
+  @override
+  Widget build(BuildContext context) {
+    return Center(child: Text('2. Crear y Gestionar Eventos para $bandId', style: const TextStyle(color: AppColors.textWhite)));
+  }
+}
+
+class BandMetricsScreen extends StatelessWidget {
+  final String bandId;
+  const BandMetricsScreen({super.key, required this.bandId});
+  @override
+  Widget build(BuildContext context) {
+    return Center(child: Text('3. Métricas y Estadísticas para $bandId', style: const TextStyle(color: AppColors.textWhite)));
+  }
+}
+// ---------------------------------------------
 
 class MyBandScreen extends StatelessWidget {
   const MyBandScreen({super.key});
@@ -12,12 +31,12 @@ class MyBandScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+
     if (user == null) {
-      // Manejar el caso si el usuario no está logueado (aunque no debería pasar)
-      return const Center(child: Text('Error de autenticación.', style: TextStyle(color: AppColors.textWhite)));
+      return const Center(child: Text('Authentication Error.', style: TextStyle(color: AppColors.textWhite)));
     }
 
-    // Escuchamos el documento del usuario para saber si tiene banda
+    // El StreamBuilder lee el documento del usuario para obtener el ID de la banda
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
       builder: (context, snapshot) {
@@ -25,49 +44,54 @@ class MyBandScreen extends StatelessWidget {
           return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(AppColors.primaryColor)));
         }
 
-        // Verifica si el campo 'hasBand' está en true
-        final hasBand = snapshot.data?.get('hasBand') ?? false;
+        final userData = snapshot.data?.data() as Map<String, dynamic>?;
+        final bandId = userData?['mainBandId'] as String?;
 
-        if (hasBand) {
-          // Opción A: Ya tiene banda -> Muestra el Dashboard de la banda
+        // 🛑 Seguridad: Si llega aquí sin ID de banda (aunque el hasBand lo previene)
+        if (bandId == null) {
           return const Center(
             child: Text(
-              'Dashboard de Mi Banda (¡A construir!)',
-              style: TextStyle(color: AppColors.textWhite, fontSize: 20),
-            ),
-          );
-        } else {
-          // Opción B: No tiene banda -> Muestra el botón para crearla
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  '¡Potencia tu música! Crea el perfil de tu banda ahora.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textWhite, fontSize: 18),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    // Navegación modal a la pantalla de creación
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => const CreateBandScreen()),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryColor,
-                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                  ),
-                  child: const Text(
-                    'Crear Banda',
-                    style: TextStyle(color: AppColors.textWhite, fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
+              'Error: No se encontró el ID de la banda asociada.',
+              style: TextStyle(color: AppColors.textWhite),
             ),
           );
         }
+
+        // --- DASHBOARD PRINCIPAL CON TAB BAR ---
+        return DefaultTabController(
+          length: 3, // Perfil, Eventos, Métricas
+          child: Scaffold(
+            backgroundColor: AppColors.backgroundDark,
+            appBar: AppBar(
+              backgroundColor: AppColors.backgroundDark,
+              automaticallyImplyLeading: false, // Ocultar el botón de retroceso
+              title: const Text('Dashboard de Mi Banda', style: TextStyle(color: AppColors.textWhite)),
+              elevation: 0,
+              bottom: TabBar(
+                indicatorColor: AppColors.primaryColor, // Indicador Rojo Coral
+                labelColor: AppColors.primaryColor,
+                unselectedLabelColor: AppColors.textSecondary,
+                tabs: const [
+                  Tab(icon: Icon(Icons.edit_note), text: 'Perfil'),
+                  Tab(icon: Icon(Icons.event), text: 'Eventos'),
+                  Tab(icon: Icon(Icons.bar_chart), text: 'Métricas'),
+                ],
+              ),
+            ),
+            body: TabBarView(
+              children: [
+                // 1. Perfil Editable
+                BandProfileScreen(bandId: bandId),
+
+                // 2. Gestión de Eventos
+                BandEventsManagerScreen(bandId: bandId),
+
+                // 3. Métricas
+                BandMetricsScreen(bandId: bandId),
+              ],
+            ),
+          ),
+        );
       },
     );
   }

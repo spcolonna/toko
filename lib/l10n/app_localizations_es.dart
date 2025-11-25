@@ -31,6 +31,40 @@ class AppLocalizationsEs extends AppLocalizations {
   String get forgotPasswordLink => '¿Olvidaste tu contraseña?';
 
   @override
+  String get createBandTitle => 'Crea tu Banda';
+
+  @override
+  String get bandNameLabel => 'Nombre de la banda';
+
+  @override
+  String get cityLabel => 'Ciudad (Ej: Buenos Aires)';
+
+  @override
+  String get bioLabel => 'Biografía de la banda';
+
+  @override
+  String get selectGenresLabel => 'Selecciona los géneros (máx. 3)';
+
+  @override
+  String get createBandButton => 'Crear mi Banda';
+
+  @override
+  String get contactEmailLabel => 'Email de Contacto';
+
+  @override
+  String get socialLinksLabel =>
+      'Links Sociales (URL de Spotify, YouTube, etc.)';
+
+  @override
+  String get dateFoundedLabel => 'Fecha de Fundación (Nacimiento de la Banda)';
+
+  @override
+  String get dateFoundedPlaceholder => 'Seleccionar fecha';
+
+  @override
+  String get yourRoleLabel => 'Tu Rol en la Banda (Rol principal)';
+
+  @override
   String get errorTitle => '¡Ups!';
 
   @override
@@ -67,24 +101,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get ok => 'Aceptar';
 
   @override
-  String get createBandTitle => 'Crea tu Banda';
-
-  @override
-  String get bandNameLabel => 'Nombre de la banda';
-
-  @override
-  String get cityLabel => 'Ciudad (Ej: Buenos Aires)';
-
-  @override
-  String get bioLabel => 'Biografía de la banda';
-
-  @override
-  String get selectGenresLabel => 'Selecciona los géneros (máx. 3)';
-
-  @override
-  String get createBandButton => 'Crear mi Banda';
-
-  @override
   String get bandCreationErrorMissingFields =>
-      'Por favor, completa el nombre, la ciudad y selecciona al menos un género.';
+      'Por favor, completa el nombre, la ciudad, la fecha de fundación y tu rol.';
 }

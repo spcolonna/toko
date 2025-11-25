@@ -3,12 +3,24 @@
     "appName": "Toko",
     "appSlogan": "Conecta con tu audiencia y descubre el próximo toque en vivo.",
 
-
     "emailLabel": "Correo electrónico",
     "passwordLabel": "Contraseña",
     "loginButton": "Iniciar Sesión",
     "createAccountButton": "Crear Cuenta",
     "forgotPasswordLink": "¿Olvidaste tu contraseña?",
+
+    "createBandTitle": "Crea tu Banda",
+    "bandNameLabel": "Nombre de la banda",
+    "cityLabel": "Ciudad (Ej: Buenos Aires)",
+    "bioLabel": "Biografía de la banda",
+    "selectGenresLabel": "Selecciona los géneros (máx. 3)",
+    "createBandButton": "Crear mi Banda",
+
+    "contactEmailLabel": "Email de Contacto",
+    "socialLinksLabel": "Links Sociales (URL de Spotify, YouTube, etc.)",
+    "dateFoundedLabel": "Fecha de Fundación (Nacimiento de la Banda)",
+    "dateFoundedPlaceholder": "Seleccionar fecha",
+    "yourRoleLabel": "Tu Rol en la Banda (Rol principal)",
 
 
     "errorTitle": "¡Ups!",
@@ -20,23 +32,15 @@
     "registrationErrorTitle": "Error de registro",
     "registrationErrorContent": "No pudimos crear tu cuenta. Verifica los datos e intenta de nuevo.",
     "genericErrorContent": "Error: {errorDetails}",
+
     "@genericErrorContent": {
-            "placeholders": {
-                "errorDetails": {
-                    "type": "Object"
-                }
+        "placeholders": {
+            "errorDetails": {
+                "type": "Object"
             }
-        },
+        }
+    },
+
     "ok": "Aceptar",
-
-
-    "createBandTitle": "Crea tu Banda",
-    "bandNameLabel": "Nombre de la banda",
-    "cityLabel": "Ciudad (Ej: Buenos Aires)",
-    "bioLabel": "Biografía de la banda",
-    "selectGenresLabel": "Selecciona los géneros (máx. 3)",
-    "createBandButton": "Crear mi Banda",
-
-
-    "bandCreationErrorMissingFields": "Por favor, completa el nombre, la ciudad y selecciona al menos un género."
+    "bandCreationErrorMissingFields": "Por favor, completa el nombre, la ciudad, la fecha de fundación y tu rol."
 }

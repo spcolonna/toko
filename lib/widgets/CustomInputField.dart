@@ -8,6 +8,7 @@ class CustomInputField extends StatelessWidget {
   final IconData icon;
   final bool isObscure;
   final int maxLines;
+  final String? hintText;
 
   const CustomInputField({
     super.key,
@@ -16,6 +17,7 @@ class CustomInputField extends StatelessWidget {
     required this.icon,
     this.isObscure = false,
     this.maxLines = 1,
+    this.hintText,
   });
 
   @override
@@ -27,9 +29,9 @@ class CustomInputField extends StatelessWidget {
       style: const TextStyle(color: AppColors.textWhite),
       decoration: InputDecoration(
         labelText: labelText,
+        hintText: hintText,
         labelStyle: TextStyle(color: AppColors.textSecondary),
         prefixIcon: Icon(icon, color: AppColors.textSecondary),
-        // ... (otros estilos de decoración, como border, fill color, etc.)
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.5)),

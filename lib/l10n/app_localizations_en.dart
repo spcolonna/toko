@@ -31,6 +31,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPasswordLink => 'Forgot your password?';
 
   @override
+  String get createBandTitle => 'Create Your Band';
+
+  @override
+  String get bandNameLabel => 'Band name';
+
+  @override
+  String get cityLabel => 'City (Ex: Buenos Aires)';
+
+  @override
+  String get bioLabel => 'Band biography';
+
+  @override
+  String get selectGenresLabel => 'Select genres (max. 3)';
+
+  @override
+  String get createBandButton => 'Create My Band';
+
+  @override
+  String get contactEmailLabel => 'Email de Contacto';
+
+  @override
+  String get socialLinksLabel =>
+      'Links Sociales (URL de Spotify, YouTube, etc.)';
+
+  @override
+  String get dateFoundedLabel => 'Fecha de Fundación (Nacimiento de la Banda)';
+
+  @override
+  String get dateFoundedPlaceholder => 'Seleccionar fecha';
+
+  @override
+  String get yourRoleLabel => 'Tu Rol en la Banda (Rol principal)';
+
+  @override
   String get errorTitle => 'Oops!';
 
   @override
@@ -65,24 +99,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ok => 'OK';
-
-  @override
-  String get createBandTitle => 'Create Your Band';
-
-  @override
-  String get bandNameLabel => 'Band name';
-
-  @override
-  String get cityLabel => 'City (Ex: Buenos Aires)';
-
-  @override
-  String get bioLabel => 'Band biography';
-
-  @override
-  String get selectGenresLabel => 'Select genres (max. 3)';
-
-  @override
-  String get createBandButton => 'Create My Band';
 
   @override
   String get bandCreationErrorMissingFields =>
