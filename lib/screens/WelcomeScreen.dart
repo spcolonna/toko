@@ -1,27 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:toko/screens/parent/add_child_screen.dart';
-import 'package:toko/screens/parent/guardian_dashboard_screen.dart';
-import 'package:toko/screens/role_selector_screen.dart';
-import 'package:toko/screens/student/application_sent_screen.dart';
-import 'package:toko/screens/student/school_search_screen.dart';
-import 'package:toko/screens/student/student_dashboard_screen.dart';
-import 'package:toko/screens/teacher_dashboard_screen.dart';
-import 'package:toko/screens/wizard_create_school_screen.dart';
-import 'package:toko/screens/wizard_discipline_hub_screen.dart';
-import 'package:toko/screens/wizard_profile_screen.dart';
 import 'package:toko/services/auth_service.dart';
 import 'package:toko/theme/AppColors.dart';
 import 'package:toko/widgets/CustomInputField.dart';
 import 'package:toko/widgets/CustomPasswordField.dart';
-import 'package:toko/widgets/PrimaryButton.dart';
 import 'package:toko/widgets/SecondaryButton.dart';
 
 import '../l10n/app_localizations.dart';
-import '../providers/session_provider.dart';
-import '../widgets/language_switcher.dart';
+import 'Toko/MainNavigationScreen.dart';
 import 'forgot_password_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -36,92 +23,35 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   final AuthService _authService = AuthService();
+  bool _isLogin = true;
 
+  // Métodos de navegación y autenticación (se mantienen intactos)
   Future<void> _navigateAfterAuth(User user) async {
-    final userProfileDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    final userProfileRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final userProfileDoc = await userProfileRef.get();
 
     if (!mounted) return;
 
+    // Si el perfil NO existe, lo creamos.
     if (!userProfileDoc.exists) {
       final newUserProfile = {
-        'uid': user.uid, 'email': user.email, 'wizardStep': 0, 'createdAt': FieldValue.serverTimestamp(), 'displayName': user.displayName ?? '', 'photoUrl': user.photoURL ?? '',
+        'uid': user.uid,
+        'email': user.email,
+        'createdAt': FieldValue.serverTimestamp(),
+        'displayName': user.displayName ?? '',
+        'photoUrl': user.photoURL ?? '',
+        'hasBand': false, // Campo clave para el futuro Tab Bar dinámico
+        'followingBands': [], // Array para bandas seguidas
+        'rsvpEvents': [], // Array para eventos a los que va
       };
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set(newUserProfile);
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const WizardProfileScreen()));
-      return;
+      await userProfileRef.set(newUserProfile);
     }
 
-    final userData = userProfileDoc.data()!;
-    final int wizardStep = userData['wizardStep'] ?? 0;
-    final String? userRole = userData['role']; // Leemos el rol del usuario
-
-    // --- LÓGICA DE NAVEGACIÓN CORREGIDA ---
-    if (wizardStep < 99) {
-      // Si el wizard no está completo, redirigimos al paso correcto
-      switch (wizardStep) {
-        case 0: // Aún no ha completado el perfil inicial
-          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const WizardProfileScreen()));
-          break;
-        case 1: // Ya completó el perfil, ahora decidimos a dónde va según su ROL
-          switch (userRole) {
-            case 'student':
-              Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const SchoolSearchScreen(isFromWizard: true)));
-              break;
-            case 'parent':
-              Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const AddChildScreen()));
-              break;
-            case 'teacher':
-            case 'both':
-              Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const WizardCreateSchoolScreen()));
-              break;
-            default: // Si no tiene rol (caso raro), lo mandamos a completar el perfil de nuevo
-              Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const WizardProfileScreen()));
-          }
-          break;
-
-      // Los pasos 2, 3, 4 y 5 son para maestros que crean su escuela
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-          final memberships = userData['activeMemberships'] as Map<String, dynamic>? ?? {};
-          if (memberships.isNotEmpty) {
-            final schoolId = memberships.keys.first;
-            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => WizardDisciplineHubScreen(schoolId: schoolId)));
-          } else {
-            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const WizardCreateSchoolScreen()));
-          }
-          break;
-
-        default:
-        // Si es un paso desconocido, por seguridad lo mandamos al principio del wizard
-          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const WizardProfileScreen()));
-      }
-    } else {
-      // Si el wizard está completo (wizardStep == 99), aplicamos la lógica de usuario activo
-      final memberships = userData['activeMemberships'] as Map<String, dynamic>? ?? {};
-
-      if (userRole == 'parent' && memberships.isEmpty) {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const GuardianDashboardScreen()));
-      } else if (memberships.isNotEmpty) {
-        if (memberships.length == 1 && (userRole == 'student' || userRole == 'teacher')) {
-          final schoolId = memberships.keys.first;
-          final role = memberships.values.first;
-          Provider.of<SessionProvider>(context, listen: false).setFullActiveSession(schoolId, role, user.uid);
-          Widget destination = (role == 'maestro') ? const TeacherDashboardScreen() : const StudentDashboardScreen();
-          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => destination));
-        } else {
-          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const RoleSelectorScreen()));
-        }
-      } else {
-        final pendingApplication = userData['pendingApplications'] as Map<String, dynamic>?;
-        if (pendingApplication != null) {
-          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => ApplicationSentScreen(schoolName: pendingApplication['schoolName'] ?? '')));
-        } else {
-          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SchoolSearchScreen()));
-        }
-      }
-    }
+    // REDIRECCIÓN FINAL: Navegar a la pantalla principal
+    // Usamos pushReplacement para que el usuario no pueda volver al login con el botón 'atrás'
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen())
+    );
   }
 
   Future<void> _performLogin() async {
@@ -195,100 +125,176 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     _passwordController.dispose();
     super.dispose();
   }
+// --- WIDGETS AUXILIARES PARA EL BUILD ---
 
+  // WIDGET PRINCIPAL DEL FORMULARIO (para usar con AnimatedSwitcher)
+  Widget _buildAuthFormBody(AppLocalizations l10n, bool isLogin) {
+    // Usamos el 'key' aquí para que AnimatedSwitcher sepa cuándo el contenido
+    // de esta sección ha cambiado (Login vs Registro).
+    return Column(
+      key: ValueKey<bool>(isLogin),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Enlace de Olvidé Contraseña (solo aparece en modo Login)
+        if (isLogin)
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () {
+                // Navegación a la pantalla de Olvidé Contraseña
+                Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()));
+              },
+              child: Text(
+                l10n.forgotPasswordLink,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
+          ),
+
+        const SizedBox(height: 16.0), // Espaciador para separar del botón
+
+        // El botón de acción principal (Login/Registro)
+        if (_isLoading)
+          const Center(
+              child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryColor)
+              )
+          )
+        else
+          SecondaryButton(
+            text: isLogin ? l10n.loginButton : l10n.createAccountButton,
+            onPressed: isLogin ? _performLogin : _performRegistration,
+          ),
+      ],
+    );
+  }
+
+  // --- WIDGET PRIVADO: EL CONMUTADOR (TOGGLE) CON ANIMACIÓN (se mantiene igual) ---
+  Widget _buildAuthToggle(AppLocalizations l10n) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.backgroundDark,
+        borderRadius: BorderRadius.circular(30.0),
+        border: Border.all(color: AppColors.textSecondary, width: 1.0),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildToggleItem(l10n.loginButton, true),
+          _buildToggleItem(l10n.createAccountButton, false),
+        ],
+      ),
+    );
+  }
+
+  // --- ITEM INDIVIDUAL DEL TOGGLE (se mantiene igual) ---
+  Widget _buildToggleItem(String text, bool targetLoginState) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () { setState(() { _isLogin = targetLoginState; }); },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+          decoration: BoxDecoration(
+            color: _isLogin == targetLoginState ? AppColors.primaryColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(30.0),
+          ),
+          child: Center(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: _isLogin == targetLoginState ? AppColors.textWhite : AppColors.textSecondary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- CONSTRUCCIÓN DE LA UI (NUEVO ORDEN) ---
   @override
   Widget build(BuildContext context) {
-    // Obtenemos la instancia de l10n para usar en el build
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundGray,
-      body: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height * 0.35,
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            decoration: const BoxDecoration(
-              color: AppColors.primaryColor,
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(50)),
-            ),
-            child: SafeArea( // 1. Envolvemos el Stack con SafeArea
-              child: Stack(
-                children: [
-                  // La columna con el logo y el título no cambia...
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Center(
-                        child: ClipOval(
-                          child: Image.asset('assets/logo/Logo.png', height: 90, width: 90, fit: BoxFit.cover),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.appName,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 42.0, fontWeight: FontWeight.bold, color: AppColors.textWhite),
-                      ),
-                    ],
-                  ),
-                  Positioned(
-                    // 2. Ahora podemos usar top: 0 porque es relativo al ÁREA SEGURA, no a la pantalla.
-                    top: 0,
-                    right: 12, // Un poco de espacio desde el borde
-                    child: const LanguageSwitcher(),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    Text(
-                      l10n.appSlogan,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 18, color: AppColors.textLight),
-                    ),
-                    const SizedBox(height: 32.0),
-                    CustomInputField(
-                      controller: _emailController,
-                      labelText: l10n.emailLabel,
-                      icon: Icons.email_outlined,
-                    ),
-                    const SizedBox(height: 16.0),
-                    CustomPasswordField(
-                      controller: _passwordController,
-                    ),
-                    const SizedBox(height: 32.0),
-                    if (_isLoading)
-                      const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.secondaryColor))
-                    else
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          SecondaryButton(text: l10n.loginButton, onPressed: _performLogin),
-                          const SizedBox(height: 16.0),
-                          PrimaryButton(text: l10n.createAccountButton, onPressed: _performRegistration),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()));
-                            },
-                            child: Text(l10n.forgotPasswordLink),
-                          )
-                        ],
-                      ),
-                  ],
+      backgroundColor: AppColors.backgroundDark,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 48.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch, // Para que el formulario se estire
+            children: [
+              // 1. LOGO Y SLOGAN
+              Center(
+                child: ClipOval(
+                  child: Image.asset('assets/logo/Logo.png', height: 100, width: 100, fit: BoxFit.cover),
                 ),
               ),
-            ),
+              const SizedBox(height: 16),
+              Center(
+                child: Text(
+                  l10n.appName,
+                  style: const TextStyle(
+                    fontSize: 36.0,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textWhite,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: Text(
+                  l10n.appSlogan,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 48.0),
+
+              // 2. CONMUTADOR (TOGGLE)
+              _buildAuthToggle(l10n),
+              const SizedBox(height: 32.0),
+
+              // 3. CAMPOS DE TEXTO ESTATICOS (FUERA DE LA ANIMACIÓN)
+              CustomInputField(
+                controller: _emailController,
+                labelText: l10n.emailLabel,
+                icon: Icons.email_outlined,
+              ),
+              const SizedBox(height: 16.0),
+              CustomPasswordField(
+                controller: _passwordController,
+              ),
+              const SizedBox(height: 32.0), // Separación antes de la parte animada
+
+              // 4. SECCIÓN INFERIOR ANIMADA (BOTÓN Y ENLACE)
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 500),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.0, 0.05),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
+                child: _buildAuthFormBody(l10n, _isLogin),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

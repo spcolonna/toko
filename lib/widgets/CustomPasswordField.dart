@@ -29,7 +29,7 @@ class _CustomPasswordFieldState extends State<CustomPasswordField> {
       controller: widget.controller,
       obscureText: _isObscured,
       decoration: InputDecoration(
-        labelText: l10n.password,
+        labelText: 'l10n.password',
         prefixIcon: const Icon(Icons.lock_outline),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

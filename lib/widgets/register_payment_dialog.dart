@@ -63,7 +63,7 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(l10n.registerPayment),
+      title: Text('l10n.registerPayment'),
       content: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           // --- CAMBIO: Reemplazamos ToggleButtons por SegmentedButton ---
@@ -71,12 +71,12 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
             segments: <ButtonSegment<PaymentType>>[
               ButtonSegment<PaymentType>(
                 value: PaymentType.plan,
-                label: Text(l10n.planPayment),
+                label: Text('l10n.planPayment'),
                 icon: const Icon(Icons.article_outlined),
               ),
               ButtonSegment<PaymentType>(
                 value: PaymentType.special,
-                label: Text(l10n.specialPayment),
+                label: Text('l10n.specialPayment'),
                 icon: const Icon(Icons.star_outline),
               ),
             ],
@@ -98,7 +98,7 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
           if (_paymentType == PaymentType.plan)
             DropdownButtonFormField<PaymentPlanModel>(
               value: _selectedPlan,
-              hint: Text(l10n.selectPlan),
+              hint: Text('l10n.selectPlan'),
               items: widget.allPlans.map((plan) => DropdownMenuItem(value: plan, child: Text(plan.title))).toList(),
               onChanged: (plan) { setState(() { _selectedPlan = plan; _updateFieldsFromPlan(); }); },
               isExpanded: true,
@@ -106,20 +106,20 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _conceptController,
-            decoration: InputDecoration(labelText: l10n.concept),
+            decoration: InputDecoration(labelText: 'l10n.concept'),
             readOnly: _paymentType == PaymentType.plan, // Si es pago de plan, no se puede editar
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: _amountController,
-            decoration: InputDecoration(labelText: l10n.amount, prefixText: '${widget.currency} '),
+            decoration: InputDecoration(labelText: 'l10n.amount', prefixText: '${widget.currency} '),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             readOnly: _paymentType == PaymentType.plan, // Si es pago de plan, no se puede editar
           ),
         ]),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text('l10n.cancel')),
         ElevatedButton(
           onPressed: () {
             final amount = double.tryParse(_amountController.text) ?? 0.0;
@@ -130,7 +130,7 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
             widget.onSave(_conceptController.text.trim(), amount, _paymentType == PaymentType.plan ? _selectedPlan?.id : null);
             Navigator.of(context).pop();
           },
-          child: Text(l10n.savePayment),
+          child: Text('l10n.savePayment'),
         ),
       ],
     );

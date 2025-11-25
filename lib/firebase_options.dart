@@ -44,9 +44,9 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyDVrmv1orU_-FLVXPFirEwyiN83ImjoYEQ',
     appId: '1:891576872027:web:f0f5743ac41f777d57237e',
     messagingSenderId: '891576872027',
-    projectId: 'warriorpath-89a85',
-    authDomain: 'warriorpath-89a85.firebaseapp.com',
-    storageBucket: 'warriorpath-89a85.firebasestorage.app',
+    projectId: 'toko-113ff',
+    authDomain: 'toko-113ff.firebaseapp.com',
+    storageBucket: 'toko-113ff.firebasestorage.app',
     measurementId: 'G-R30BDW4RSX',
   );
 
@@ -54,16 +54,16 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyB-8Uj9ycOFdyk2D3drrKnPa3ps3FHytvY',
     appId: '1:891576872027:android:c0b199ef6daf889757237e',
     messagingSenderId: '891576872027',
-    projectId: 'warriorpath-89a85',
-    storageBucket: 'warriorpath-89a85.firebasestorage.app',
+    projectId: 'toko-113ff',
+    storageBucket: 'toko-113ff.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBs6GoKFjmhUDCol364okgZ7lO_D_1AKuc',
     appId: '1:891576872027:ios:4fb588ba51f79f8e57237e',
     messagingSenderId: '891576872027',
-    projectId: 'warriorpath-89a85',
-    storageBucket: 'warriorpath-89a85.firebasestorage.app',
+    projectId: 'toko-113ff',
+    storageBucket: 'toko-113ff.firebasestorage.app',
     iosBundleId: 'com.toko.app',
   );
 
@@ -71,8 +71,8 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyBs6GoKFjmhUDCol364okgZ7lO_D_1AKuc',
     appId: '1:891576872027:ios:cb84410d774a148557237e',
     messagingSenderId: '891576872027',
-    projectId: 'warriorpath-89a85',
-    storageBucket: 'warriorpath-89a85.firebasestorage.app',
+    projectId: 'toko-113ff',
+    storageBucket: 'toko-113ff.firebasestorage.app',
     iosBundleId: 'com.example.toko',
   );
 
@@ -80,9 +80,9 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyDVrmv1orU_-FLVXPFirEwyiN83ImjoYEQ',
     appId: '1:891576872027:web:a0f4c38f5f9b0dcc57237e',
     messagingSenderId: '891576872027',
-    projectId: 'warriorpath-89a85',
-    authDomain: 'warriorpath-89a85.firebaseapp.com',
-    storageBucket: 'warriorpath-89a85.firebasestorage.app',
+    projectId: 'toko-113ff',
+    authDomain: 'toko-113ff.firebaseapp.com',
+    storageBucket: 'toko-113ff.firebasestorage.app',
     measurementId: 'G-XGRM6WQ1GN',
   );
 }
