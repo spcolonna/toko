@@ -5,18 +5,7 @@ import 'package:toko/theme/AppColors.dart';
 
 import 'Band/band_metrics_screen.dart';
 import 'Band/band_profile_screen.dart';
-
-// --- Placeholder/Clases de Sub-pantallas ---
-class BandEventsManagerScreen extends StatelessWidget {
-  final String bandId;
-  const BandEventsManagerScreen({super.key, required this.bandId});
-  @override
-  Widget build(BuildContext context) {
-    return Center(child: Text('2. Crear y Gestionar Eventos para $bandId', style: const TextStyle(color: AppColors.textWhite)));
-  }
-}
-
-// ---------------------------------------------
+import 'Events/band_events_screen.dart';
 
 class MyBandScreen extends StatelessWidget {
   const MyBandScreen({super.key});
@@ -77,7 +66,7 @@ class MyBandScreen extends StatelessWidget {
                 BandProfileScreen(bandId: bandId),
 
                 // 2. Gestión de Eventos
-                BandEventsManagerScreen(bandId: bandId),
+                BandEventsScreen(bandId: bandId),
 
                 // 3. Métricas
                 BandMetricsScreen(bandId: bandId),
