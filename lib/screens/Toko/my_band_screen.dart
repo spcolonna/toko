@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:toko/theme/AppColors.dart';
 
+import 'Match/applications_admin_screen.dart';
 import 'Band/band_metrics_screen.dart';
 import 'Band/band_profile_screen.dart';
 import 'Events/band_events_screen.dart';
@@ -29,7 +30,6 @@ class MyBandScreen extends StatelessWidget {
         final userData = snapshot.data?.data() as Map<String, dynamic>?;
         final bandId = userData?['mainBandId'] as String?;
 
-        // 🛑 Seguridad: Si llega aquí sin ID de banda (aunque el hasBand lo previene)
         if (bandId == null) {
           return const Center(
             child: Text(
@@ -41,22 +41,23 @@ class MyBandScreen extends StatelessWidget {
 
         // --- DASHBOARD PRINCIPAL CON TAB BAR ---
         return DefaultTabController(
-          length: 3, // Perfil, Eventos, Métricas
+          length: 4, // 📌 AHORA SON 4 PESTAÑAS
           child: Scaffold(
             backgroundColor: AppColors.backgroundDark,
             appBar: AppBar(
               backgroundColor: AppColors.backgroundDark,
-              automaticallyImplyLeading: false, // Ocultar el botón de retroceso
+              automaticallyImplyLeading: false,
               title: const Text('Dashboard de Mi Banda', style: TextStyle(color: AppColors.textWhite)),
               elevation: 0,
               bottom: TabBar(
-                indicatorColor: AppColors.primaryColor, // Indicador Rojo Coral
+                indicatorColor: AppColors.primaryColor,
                 labelColor: AppColors.primaryColor,
                 unselectedLabelColor: AppColors.textSecondary,
                 tabs: const [
                   Tab(icon: Icon(Icons.edit_note), text: 'Perfil'),
                   Tab(icon: Icon(Icons.event), text: 'Eventos'),
                   Tab(icon: Icon(Icons.bar_chart), text: 'Métricas'),
+                  Tab(icon: Icon(Icons.email), text: 'Postulaciones'), // 📌 NUEVA PESTAÑA
                 ],
               ),
             ),
@@ -70,6 +71,9 @@ class MyBandScreen extends StatelessWidget {
 
                 // 3. Métricas
                 BandMetricsScreen(bandId: bandId),
+
+                // 4. Postulaciones (Administración de Match)
+                ApplicationsAdminScreen(bandId: bandId), // 📌 NUEVA VISTA
               ],
             ),
           ),
