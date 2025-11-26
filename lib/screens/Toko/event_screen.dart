@@ -1,44 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // 📌 NECESARIO para obtener el UID real
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:toko/theme/AppColors.dart';
+
+import 'Events/event_detail_screen.dart';
 
 class EventScreen extends StatelessWidget {
   const EventScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Escuchamos los cambios de estado de autenticación de Firebase
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, authSnapshot) {
-        // Muestra un indicador de carga si la autenticación está en progreso
         if (authSnapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: AppColors.backgroundDark,
-            body: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(AppColors.primaryColor))),
-          );
+          return const Scaffold(backgroundColor: AppColors.backgroundDark, body: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(AppColors.primaryColor))),);
         }
 
         final User? user = authSnapshot.data;
-
-        // Si el usuario no está autenticado, no podemos mostrar el feed interactivo
         if (user == null) {
-          return const Scaffold(
-            backgroundColor: AppColors.backgroundDark,
-            body: Center(
-                child: Text(
-                    'Debes iniciar sesión para ver los eventos.',
-                    style: TextStyle(color: AppColors.textSecondary)
-                )
-            ),
-          );
+          return const Scaffold(backgroundColor: AppColors.backgroundDark, body: Center(child: Text('Debes iniciar sesión para ver los eventos.', style: TextStyle(color: AppColors.textSecondary))),);
         }
 
-        final String currentUserId = user.uid; // 📌 OBTENCIÓN REAL DEL UID
+        final String currentUserId = user.uid;
 
-        // 1. Consulta: Todos los eventos futuros, ordenados por fecha.
         final Stream<QuerySnapshot> eventsStream = FirebaseFirestore.instance
             .collection('events')
             .where('date', isGreaterThanOrEqualTo: Timestamp.now())
@@ -65,13 +51,7 @@ class EventScreen extends StatelessWidget {
               final events = snapshot.data?.docs ?? [];
 
               if (events.isEmpty) {
-                return const Center(
-                  child: Text(
-                      'No hay eventos programados.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textSecondary)
-                  ),
-                );
+                return const Center(child: Text('No hay eventos programados.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)));
               }
 
               return ListView.builder(
@@ -85,7 +65,18 @@ class EventScreen extends StatelessWidget {
                   return EventCard(
                     eventId: eventId,
                     eventData: eventData,
-                    currentUserId: currentUserId, // 📌 Pasando el UID real
+                    currentUserId: currentUserId,
+                    onTap: () {
+                      // 📌 NAVEGACIÓN IMPLEMENTADA
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => EventDetailScreen(
+                            eventId: eventId,
+                            currentUserId: currentUserId,
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               );
@@ -97,38 +88,27 @@ class EventScreen extends StatelessWidget {
   }
 }
 
-// -----------------------------------------------------------
-// WIDGET DE TARJETA DE EVENTO (INTERACTIVA)
-// -----------------------------------------------------------
-
+// El widget EventCard debe ser definido en este archivo o importado
 class EventCard extends StatelessWidget {
   final String eventId;
   final Map<String, dynamic> eventData;
   final String currentUserId;
+  final VoidCallback? onTap; // Añadido para permitir la acción de navegación
 
-  // ❌ ANTES: const EventCard({...});
-  // ✅ AHORA: SIN 'const' porque Firestore.instance es una variable de tiempo de ejecución.
   EventCard({
     super.key,
     required this.eventId,
     required this.eventData,
     required this.currentUserId,
+    this.onTap,
   });
 
   // Función para manejar la asistencia (Add/Remove User ID)
   Future<void> toggleAttendance() async {
     final eventRef = FirebaseFirestore.instance.collection('events').doc(eventId);
-
     final List<String> attendees = List<String>.from(eventData['attendees'] ?? []);
-
     final isGoing = attendees.contains(currentUserId);
-
-    final updateData = {
-      'attendees': isGoing
-          ? FieldValue.arrayRemove([currentUserId])
-          : FieldValue.arrayUnion([currentUserId]),
-    };
-
+    final updateData = {'attendees': isGoing ? FieldValue.arrayRemove([currentUserId]) : FieldValue.arrayUnion([currentUserId])};
     try {
       await eventRef.update(updateData);
     } catch (e) {
@@ -141,70 +121,49 @@ class EventCard extends StatelessWidget {
     final date = (eventData['date'] as Timestamp).toDate();
     final List<String> attendees = List<String>.from(eventData['attendees'] ?? []);
     final bool isGoing = attendees.contains(currentUserId);
-
     final int attendeeCount = attendees.length;
 
-    return Card(
-      color: AppColors.secondaryColor.withOpacity(0.3),
-      margin: const EdgeInsets.only(bottom: 16.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Fecha y Título
-            Row(
-              children: [
-                Column(
-                  children: [
-                    Text(DateFormat('MMM', 'es').format(date).toUpperCase(), style: const TextStyle(color: AppColors.primaryColor, fontSize: 12)),
-                    Text(DateFormat('dd').format(date), style: const TextStyle(color: AppColors.primaryColor, fontSize: 24, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                      eventData['title'] ?? 'Evento sin título',
-                      style: const TextStyle(color: AppColors.textWhite, fontSize: 20, fontWeight: FontWeight.bold)
+    return GestureDetector(
+      onTap: onTap, // Usa el callback onTap para la navegación
+      child: Card(
+        color: AppColors.secondaryColor.withOpacity(0.3),
+        margin: const EdgeInsets.only(bottom: 16.0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ... (Contenido del card)
+              Row(children: [
+                Column(children: [
+                  Text(DateFormat('MMM', 'es').format(date).toUpperCase(), style: const TextStyle(color: AppColors.primaryColor, fontSize: 12)),
+                  Text(DateFormat('dd').format(date), style: const TextStyle(color: AppColors.primaryColor, fontSize: 24, fontWeight: FontWeight.bold)),
+                ]), const SizedBox(width: 16),
+                Expanded(child: Text(eventData['title'] ?? 'Evento sin título', style: const TextStyle(color: AppColors.textWhite, fontSize: 20, fontWeight: FontWeight.bold))),
+              ]),
+              const Divider(color: AppColors.secondaryColor, height: 24),
+              Text('${eventData['place'] ?? 'Lugar no especificado'}', style: const TextStyle(color: AppColors.textSecondary)),
+              Text('Hora: ${DateFormat('HH:mm').format(date)}', style: const TextStyle(color: AppColors.textSecondary)),
+              const SizedBox(height: 12),
+              Row(children: [const Icon(Icons.people, color: AppColors.textSecondary, size: 18), const SizedBox(width: 4), Text('$attendeeCount personas van', style: const TextStyle(color: AppColors.textSecondary)),]),
+              const SizedBox(height: 16),
+
+              // Botón de Asistencia
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: toggleAttendance,
+                  icon: Icon(isGoing ? Icons.check_circle : Icons.person_add, color: AppColors.textWhite),
+                  label: Text(isGoing ? '¡Estás Asistiendo!' : 'Quiero Asistir', style: const TextStyle(fontSize: 16, color: AppColors.textWhite)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isGoing ? AppColors.primaryColor.withOpacity(0.8) : AppColors.primaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
-              ],
-            ),
-            const Divider(color: AppColors.secondaryColor, height: 24),
-
-            // Lugar y Hora
-            Text('${eventData['place'] ?? 'Lugar no especificado'}', style: const TextStyle(color: AppColors.textSecondary)),
-            Text('Hora: ${DateFormat('HH:mm').format(date)}', style: const TextStyle(color: AppColors.textSecondary)),
-            const SizedBox(height: 12),
-
-            // Asistentes
-            Row(
-              children: [
-                const Icon(Icons.people, color: AppColors.textSecondary, size: 18),
-                const SizedBox(width: 4),
-                Text('$attendeeCount personas van', style: const TextStyle(color: AppColors.textSecondary)),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Botón de Asistencia
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: toggleAttendance,
-                icon: Icon(isGoing ? Icons.check_circle : Icons.person_add, color: AppColors.textWhite),
-                label: Text(
-                  isGoing ? '¡Estás Asistiendo!' : 'Quiero Asistir',
-                  style: const TextStyle(fontSize: 16, color: AppColors.textWhite),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isGoing ? AppColors.primaryColor.withOpacity(0.8) : AppColors.primaryColor, // Usé PrimaryColor como ejemplo de éxito
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

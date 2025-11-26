@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:toko/theme/AppColors.dart';
 import 'create_event_screen.dart';
-import 'dart:developer'; // Importar para usar log()
+import 'edit_event_screen.dart'; // Importación para la edición
 
 class BandEventsScreen extends StatelessWidget {
   final String bandId;
@@ -11,26 +11,21 @@ class BandEventsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. 🛑 VERIFICACIÓN INICIAL: Si el bandId está vacío, no ejecutes la consulta.
-    if (bandId.isEmpty) {
-      return const Center(
-        child: Text(
-            'Error: El ID de la banda es inválido.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.redAccent)
-        ),
-      );
-    }
-
-    // Diagnóstico: Imprime el ID que se está consultando
-    log('Consultando eventos para Band ID: $bandId');
+    // 1. Consulta: Todos los eventos de la banda (pasados y futuros).
+    final Stream<QuerySnapshot> eventsStream = FirebaseFirestore.instance
+        .collection('events')
+        .where('bandId', isEqualTo: bandId)
+        .orderBy('date', descending: true) // Ordena del más reciente/futuro al más antiguo
+        .orderBy('createdAt', descending: true)
+        .snapshots();
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
 
+      // Botón de acción flotante (FAB) para crear el evento
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // Navegación con el bandId correcto
+          // Navegación a la pantalla de creación, pasando el bandId
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => CreateEventScreen(bandId: bandId),
@@ -42,40 +37,16 @@ class BandEventsScreen extends StatelessWidget {
         backgroundColor: AppColors.primaryColor,
       ),
 
+      // 📜 Listado de eventos de la banda
       body: StreamBuilder<QuerySnapshot>(
-        // 2. ✅ CONSULTA COMPUESTA Y ROBUSTA:
-        // Ordena por la fecha del evento y luego por la fecha de creación para consistencia.
-        stream: FirebaseFirestore.instance
-            .collection('events')
-            .where('bandId', isEqualTo: bandId)
-            .orderBy('date', descending: true)
-            .orderBy('createdAt', descending: true) // Se recomienda para resolver conflictos de tiempo.
-            .snapshots(),
-
+        stream: eventsStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(AppColors.primaryColor)));
           }
-
-          // 2. 🛑 MANEJO DEL ERROR DE ÍNDICE (Verificación Clave)
           if (snapshot.hasError) {
-            // Imprime el error completo en la consola de depuración (donde aparece la URL)
-            // Esto es crucial, ya que el error de índice contiene la URL.
-            print('--- FIREBASE INDEX ERROR DIAGNOSTIC ---');
-            print('Consulta Fallida en Eventos: ${snapshot.error}');
-            print('-----------------------------------------');
-
-            // Muestra un mensaje amigable al usuario con el error
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Text(
-                  '¡Error de configuración de la Base de Datos! Necesitas crear un índice compuesto.\n\nPor favor, revisa la consola de depuración (Debug Console) para copiar el enlace de creación del índice.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.redAccent, fontSize: 16),
-                ),
-              ),
-            );
+            print('Error al cargar eventos en BandEventsScreen: ${snapshot.error}');
+            return const Center(child: Text('Error al cargar eventos. Revisa tu consola.', style: TextStyle(color: Colors.red)));
           }
 
           final events = snapshot.data?.docs ?? [];
@@ -94,7 +65,9 @@ class BandEventsScreen extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 80),
             itemCount: events.length,
             itemBuilder: (context, index) {
-              final eventData = events[index].data() as Map<String, dynamic>;
+              final eventDoc = events[index];
+              final eventId = eventDoc.id;
+              final eventData = eventDoc.data() as Map<String, dynamic>;
               final date = (eventData['date'] as Timestamp).toDate();
               final isFuture = date.isAfter(DateTime.now());
 
@@ -118,12 +91,18 @@ class BandEventsScreen extends StatelessWidget {
                     '${eventData['place']} | ${DateFormat('HH:mm').format(date)}',
                     style: TextStyle(color: isFuture ? AppColors.textSecondary : Colors.redAccent)
                 ),
+                // 📌 Navegación al editor al hacer tap
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      // Pasa el ID del evento y el ID de la banda al editor
+                      builder: (context) => EditEventScreen(eventId: eventId, bandId: bandId),
+                    ),
+                  );
+                },
                 trailing: isFuture
                     ? const Icon(Icons.edit, color: AppColors.textSecondary)
                     : const Icon(Icons.history, color: AppColors.textSecondary),
-                onTap: () {
-                  // Navegar a la pantalla de edición/detalles del evento
-                },
               );
             },
           );
