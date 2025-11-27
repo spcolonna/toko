@@ -157,7 +157,7 @@ class _DiscoverBandsScreenState extends State<DiscoverBandsScreen> {
                 color: isSelected ? AppColors.textWhite : AppColors.textSecondary,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
-              backgroundColor: isSelected ? AppColors.primaryColor : AppColors.secondaryColor.withOpacity(0.5),
+              backgroundColor: isSelected ? AppColors.primaryColor : AppColors.secondaryColor, // #2C2828
               onPressed: () {
                 setState(() {
                   if (isSelected) {
