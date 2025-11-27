@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 import 'package:toko/theme/AppColors.dart';
 
+import 'Entities/schedule_card.dart';
 import 'Events/event_detail_screen.dart';
 
 class MyScheduleScreen extends StatelessWidget {
@@ -62,43 +62,24 @@ class MyScheduleScreen extends StatelessWidget {
                 final eventDoc = events[index];
                 final eventId = eventDoc.id;
                 final eventData = eventDoc.data() as Map<String, dynamic>;
-                final date = (eventData['date'] as Timestamp).toDate();
 
-                return Card(
-                  color: AppColors.secondaryColor.withOpacity(0.3),
-                  margin: const EdgeInsets.only(bottom: 16.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    side: const BorderSide(color: AppColors.primaryColor, width: 2),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(12),
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: AppColors.primaryColor, borderRadius: BorderRadius.circular(6)),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(DateFormat('MMM').format(date).toUpperCase(), style: const TextStyle(color: AppColors.textWhite, fontSize: 10, fontWeight: FontWeight.bold)),
-                          Text(DateFormat('dd').format(date), style: const TextStyle(color: AppColors.textWhite, fontSize: 16, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    ),
-                    title: Text(eventData['title'] ?? 'Evento sin título', style: const TextStyle(color: AppColors.textWhite, fontWeight: FontWeight.bold)),
-                    subtitle: Text('${eventData['place'] ?? 'Lugar no especificado'} | ${DateFormat('HH:mm').format(date)}', style: TextStyle(color: AppColors.textSecondary)),
-                    trailing: const Icon(Icons.check_circle_outline, color: AppColors.primaryColor, size: 28),
-                    onTap: () {
-                      // 📌 NAVEGACIÓN IMPLEMENTADA
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => EventDetailScreen(
-                            eventId: eventId,
-                            currentUserId: currentUserId,
-                          ),
+                final String currentUserId = user.uid; // Asegurar que el UID esté disponible
+
+                return ScheduleCard(
+                  eventId: eventId,
+                  eventData: eventData,
+                  currentUserId: currentUserId,
+                  onTap: () {
+                    // 📌 NAVEGACIÓN IMPLEMENTADA (Se mantiene la funcionalidad)
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => EventDetailScreen(
+                          eventId: eventId,
+                          currentUserId: currentUserId,
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             );
