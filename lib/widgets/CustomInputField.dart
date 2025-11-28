@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../theme/AppColors.dart';
+import 'package:toko/theme/AppColors.dart';
 
 class CustomInputField extends StatelessWidget {
   final TextEditingController controller;
@@ -26,41 +25,45 @@ class CustomInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField( // 📌 CAMBIO CLAVE: Usar TextFormField
-      controller: controller,
-      obscureText: isObscure,
-      maxLines: maxLines,
-      keyboardType: keyboardType, // Pasar el tipo de teclado
-      validator: validator, // 📌 IMPLEMENTACIÓN DE VALIDATOR
+    // 📌 SOLUCIÓN: Envolver el TextFormField en un Material para garantizar el contexto.
+    return Material(
+      // Usamos el color de fondo de las tarjetas, pero en su versión sólida.
+      color: AppColors.backgroundDark,
+      child: TextFormField(
+        controller: controller,
+        obscureText: isObscure,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        validator: validator,
+        style: const TextStyle(color: AppColors.textWhite),
+        decoration: InputDecoration(
+          labelText: labelText,
+          hintText: hintText,
+          hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.7)),
+          labelStyle: TextStyle(color: AppColors.textSecondary),
+          prefixIcon: Icon(icon, color: AppColors.textSecondary),
 
-      style: const TextStyle(color: AppColors.textWhite),
-      decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.7)),
-        labelStyle: TextStyle(color: AppColors.textSecondary),
-        prefixIcon: Icon(icon, color: AppColors.textSecondary),
-        filled: true,
-        fillColor: AppColors.secondaryColor.withOpacity(0.2), // Asumo que usas este fondo para inputs
+          // 📌 CORREGIR FILL COLOR: Usar un color de fondo que contraste bien con el negro Amp
+          filled: true,
+          fillColor: AppColors.secondaryColor.withOpacity(0.5),
 
-        // Estilos de borde para TextFormField
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.5)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryColor, width: 2),
-        ),
-        // 📌 IMPORTANTE: Mostrar error de validación
-        errorStyle: const TextStyle(color: Colors.redAccent, fontSize: 14),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.redAccent, width: 2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.5)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.primaryColor, width: 2),
+          ),
+          errorStyle: const TextStyle(color: Colors.redAccent, fontSize: 14),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+          ),
         ),
       ),
     );

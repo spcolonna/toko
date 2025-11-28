@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:toko/theme/AppColors.dart';
-import 'package:toko/screens/Toko/Band/band_profile_screen.dart';
 import 'package:toko/screens/Toko/create_band_screen.dart';
 
+import 'Band/band_profile_screen.dart';
 import 'Entities/management_card.dart';
 import 'Profile/musician_profile_screen.dart';
-// 📌 IMPORTACIÓN NECESARIA: Asumimos que WelcomeScreen es la pantalla de Login/Registro
 import '../WelcomeScreen.dart';
 
 
