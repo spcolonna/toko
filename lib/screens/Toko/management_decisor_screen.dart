@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:toko/screens/Toko/my_band_screen.dart';
 import 'package:toko/theme/AppColors.dart';
 import 'package:toko/screens/Toko/create_band_screen.dart';
 
@@ -63,7 +64,7 @@ class ManagementDecisorScreen extends StatelessWidget {
           subtitle: 'Gestiona eventos, miembros y métricas.',
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => BandProfileScreen(bandId: bandId!)),
+              MaterialPageRoute(builder: (context) => MyBandScreen()),
             );
           },
         )

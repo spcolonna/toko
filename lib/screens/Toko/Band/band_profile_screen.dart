@@ -5,8 +5,8 @@ import 'package:toko/widgets/CustomInputField.dart';
 import 'package:toko/widgets/SecondaryButton.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'create_band_member_screen.dart';
-import 'edit_band_member_screen.dart';
+import 'create_band_member_screen.dart'; // Asegúrate de que esta clase exista
+import 'edit_band_member_screen.dart'; // Asegúrate de que esta clase exista
 
 class BandProfileScreen extends StatefulWidget {
   final String bandId;
@@ -17,14 +17,14 @@ class BandProfileScreen extends StatefulWidget {
 }
 
 class _BandProfileScreenState extends State<BandProfileScreen> {
-  // --- CONTROLADORES Y ESTADO ---
+  // --- 1. CONTROLADORES Y ESTADO ---
   final _nameController = TextEditingController();
   final _cityController = TextEditingController();
   final _bioController = TextEditingController();
   final _emailController = TextEditingController();
   final _socialsController = TextEditingController();
   final _newMemberEmailController = TextEditingController();
-  final _phoneController = TextEditingController(); // 📌 NUEVO CONTROLADOR: TELÉFONO
+  final _phoneController = TextEditingController(); // ✅ CONTROLADOR: TELÉFONO
 
   DateTime? _dateFounded;
   Set<String> _selectedGenres = {};
@@ -37,10 +37,11 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
   void dispose() {
     _nameController.dispose(); _cityController.dispose(); _bioController.dispose();
     _emailController.dispose(); _socialsController.dispose(); _newMemberEmailController.dispose();
-    _phoneController.dispose(); // 📌 DISPOSE DEL TELÉFONO
+    _phoneController.dispose(); // ✅ DISPOSE: TELÉFONO
     super.dispose();
   }
 
+  // --- 2. LÓGICA DE CARGA DE DATOS ---
   void _loadInitialData(Map<String, dynamic> bandData) {
     if (_isDataLoaded) return;
     _nameController.text = bandData['name'] ?? '';
@@ -48,7 +49,7 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
     _bioController.text = bandData['bio'] ?? '';
     _emailController.text = bandData['contactEmail'] ?? '';
     _socialsController.text = bandData['socialLinks'] ?? '';
-    _phoneController.text = bandData['contactPhone'] ?? ''; // 📌 CARGA INICIAL DEL TELÉFONO
+    _phoneController.text = bandData['contactPhone'] ?? ''; // ✅ CARGA INICIAL: TELÉFONO
 
     final Timestamp? foundedTimestamp = bandData['dateFounded'];
     _dateFounded = foundedTimestamp?.toDate();
@@ -59,6 +60,7 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
     _isDataLoaded = true;
   }
 
+  // --- 3. MÉTODOS AUXILIARES (Funciones de navegación, pickers, etc.) ---
   Future<void> _pickDateFounded() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context, initialDate: _dateFounded ?? DateTime.now(), firstDate: DateTime(1900), lastDate: DateTime.now(),
@@ -134,13 +136,14 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
     ) ?? false;
   }
 
+  // --- 4. LÓGICA DE GUARDADO ---
   Future<void> _saveProfile() async {
     if (!mounted) return;
     try {
       final updatedData = {
         'name': _nameController.text.trim(), 'city': _cityController.text.trim(), 'bio': _bioController.text.trim(),
         'contactEmail': _emailController.text.trim(),
-        'contactPhone': _phoneController.text.trim(), // 📌 GUARDAR TELÉFONO
+        'contactPhone': _phoneController.text.trim(), // ✅ GUARDAR: TELÉFONO
         'socialLinks': _socialsController.text.trim(),
         'dateFounded': _dateFounded != null ? Timestamp.fromDate(_dateFounded!) : null,
         'genres': _selectedGenres.toList(),
@@ -157,7 +160,7 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
     }
   }
 
-  // --- UI: WIDGET DE GESTIÓN DE MIEMBROS (CON CORRECCIÓN DE MATERIAL) ---
+  // --- 5. WIDGET DE GESTIÓN DE MIEMBROS (Subdivisión de UI) ---
   Widget _buildMembersManagement(Map<String, dynamic> bandData) {
     final tokouserMembers = bandData['members'] as Map<String, dynamic>? ?? {};
 
@@ -266,7 +269,7 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double topPadding = MediaQuery.of(context).padding.top;
+    // 📌 Eliminamos el topPadding ya que el AppBar lo gestionará
 
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('bands').doc(widget.bandId).snapshots(),
@@ -289,8 +292,19 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.backgroundDark,
+          // ✅ APP BAR CON FLECHA DE RETROCESO
+          appBar: AppBar(
+            backgroundColor: AppColors.backgroundDark,
+            elevation: 0,
+            iconTheme: const IconThemeData(color: AppColors.textSecondary), // Color de la flecha
+            title: const Text(
+                'Editar Perfil de Banda',
+                style: TextStyle(color: AppColors.textWhite)
+            ),
+          ),
           body: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(24.0, 24.0 + topPadding, 24.0, 24.0),
+            // Padding estático, el AppBar maneja el padding superior
+            padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -316,12 +330,12 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
                 const SizedBox(height: 16),
                 CustomInputField(controller: _emailController, labelText: 'Email de Contacto', icon: Icons.email_outlined),
                 const SizedBox(height: 16),
-                // 📌 CAMPO DE TELÉFONO DE CONTACTO
+                // ✅ CAMPO DE TELÉFONO DE CONTACTO
                 CustomInputField(
                   controller: _phoneController,
                   labelText: 'Teléfono de Contacto',
                   icon: Icons.phone,
-                  keyboardType: TextInputType.phone,
+                  keyboardType: TextInputType.phone, // Teclado optimizado
                 ),
                 const SizedBox(height: 16),
                 CustomInputField(controller: _socialsController, labelText: 'Links Sociales (URL)', icon: Icons.link_outlined),
