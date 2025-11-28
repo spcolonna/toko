@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:toko/screens/Toko/Entities/aggressive_rock_clipper.dart';
 import 'package:toko/services/auth_service.dart';
 import 'package:toko/theme/AppColors.dart';
 import 'package:toko/widgets/CustomInputField.dart';
@@ -227,25 +228,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch, // Para que el formulario se estire
             children: [
-              // 1. LOGO Y SLOGAN
               Center(
-                child: ClipOval(
-                  child: Image.asset('assets/logo/Logo.png', height: 100, width: 100, fit: BoxFit.cover),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  l10n.appName,
-                  style: const TextStyle(
-                    fontSize: 36.0,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textWhite,
-                    letterSpacing: 1.5,
+                child: ClipPath( // 📌 CAMBIAMOS ClipOval por ClipPath
+                  clipper: AggressiveRockClipper(), // 📌 Usamos nuestro clipper personalizado
+                  child: Image.asset(
+                    'assets/logo/Logo.jpeg',
+                    height: 200, // Ajusta la altura para que la púa se vea bien
+                    width: 230, // Ajusta el ancho también
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 50),
               Center(
                 child: Text(
                   l10n.appSlogan,

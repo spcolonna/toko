@@ -124,16 +124,16 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/logo/Logo.png"
+  image_path: "assets/logo/Logo.jpeg"
 
 flutter_native_splash:
   # El color de fondo de tu pantalla de inicio. Usa el color primario de tu app.
   color: "#FFFFFF" # <-- CAMBIA ESTE COLOR SI QUIERES (ej. AppColors.primaryColor)
 
   # La imagen que se mostrará en el centro.
-  image: assets/logo/Logo.png
+  image: assets/logo/Logo.jpeg
 
   # Configuración específica para Android 12+
   android_12:
     color: "#FFFFFF"
-    image: assets/logo/Logo.png
+    image: assets/logo/Logo.jpeg
