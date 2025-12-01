@@ -46,7 +46,8 @@ class MyBandScreen extends StatelessWidget {
             backgroundColor: AppColors.backgroundDark,
             appBar: AppBar(
               backgroundColor: AppColors.backgroundDark,
-              automaticallyImplyLeading: false,
+              // ✅ CORRECCIÓN: ELIMINAR O COMENTAR esta línea para que la flecha aparezca
+              // automaticallyImplyLeading: false,
               title: const Text('Dashboard de Mi Banda', style: TextStyle(color: AppColors.textWhite)),
               elevation: 0,
               bottom: TabBar(
@@ -57,7 +58,7 @@ class MyBandScreen extends StatelessWidget {
                   Tab(icon: Icon(Icons.edit_note), text: 'Perfil'),
                   Tab(icon: Icon(Icons.event), text: 'Eventos'),
                   Tab(icon: Icon(Icons.bar_chart), text: 'Métricas'),
-                  Tab(icon: Icon(Icons.email), text: 'Postulaciones'), // 📌 NUEVA PESTAÑA
+                  Tab(icon: Icon(Icons.email), text: 'Postulaciones'),
                 ],
               ),
             ),
@@ -73,7 +74,7 @@ class MyBandScreen extends StatelessWidget {
                 BandMetricsScreen(bandId: bandId),
 
                 // 4. Postulaciones (Administración de Match)
-                ApplicationsAdminScreen(bandId: bandId), // 📌 NUEVA VISTA
+                ApplicationsAdminScreen(bandId: bandId),
               ],
             ),
           ),

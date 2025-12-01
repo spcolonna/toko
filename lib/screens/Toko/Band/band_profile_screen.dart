@@ -5,8 +5,8 @@ import 'package:toko/widgets/CustomInputField.dart';
 import 'package:toko/widgets/SecondaryButton.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'create_band_member_screen.dart'; // Asegúrate de que esta clase exista
-import 'edit_band_member_screen.dart'; // Asegúrate de que esta clase exista
+import 'create_band_member_screen.dart';
+import 'edit_band_member_screen.dart';
 
 class BandProfileScreen extends StatefulWidget {
   final String bandId;
@@ -24,7 +24,7 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
   final _emailController = TextEditingController();
   final _socialsController = TextEditingController();
   final _newMemberEmailController = TextEditingController();
-  final _phoneController = TextEditingController(); // ✅ CONTROLADOR: TELÉFONO
+  final _phoneController = TextEditingController();
 
   DateTime? _dateFounded;
   Set<String> _selectedGenres = {};
@@ -37,11 +37,10 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
   void dispose() {
     _nameController.dispose(); _cityController.dispose(); _bioController.dispose();
     _emailController.dispose(); _socialsController.dispose(); _newMemberEmailController.dispose();
-    _phoneController.dispose(); // ✅ DISPOSE: TELÉFONO
+    _phoneController.dispose();
     super.dispose();
   }
 
-  // --- 2. LÓGICA DE CARGA DE DATOS ---
   void _loadInitialData(Map<String, dynamic> bandData) {
     if (_isDataLoaded) return;
     _nameController.text = bandData['name'] ?? '';
@@ -49,7 +48,7 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
     _bioController.text = bandData['bio'] ?? '';
     _emailController.text = bandData['contactEmail'] ?? '';
     _socialsController.text = bandData['socialLinks'] ?? '';
-    _phoneController.text = bandData['contactPhone'] ?? ''; // ✅ CARGA INICIAL: TELÉFONO
+    _phoneController.text = bandData['contactPhone'] ?? '';
 
     final Timestamp? foundedTimestamp = bandData['dateFounded'];
     _dateFounded = foundedTimestamp?.toDate();
@@ -60,7 +59,6 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
     _isDataLoaded = true;
   }
 
-  // --- 3. MÉTODOS AUXILIARES (Funciones de navegación, pickers, etc.) ---
   Future<void> _pickDateFounded() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context, initialDate: _dateFounded ?? DateTime.now(), firstDate: DateTime(1900), lastDate: DateTime.now(),
@@ -136,14 +134,13 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
     ) ?? false;
   }
 
-  // --- 4. LÓGICA DE GUARDADO ---
   Future<void> _saveProfile() async {
     if (!mounted) return;
     try {
       final updatedData = {
         'name': _nameController.text.trim(), 'city': _cityController.text.trim(), 'bio': _bioController.text.trim(),
         'contactEmail': _emailController.text.trim(),
-        'contactPhone': _phoneController.text.trim(), // ✅ GUARDAR: TELÉFONO
+        'contactPhone': _phoneController.text.trim(), // GUARDAR TELÉFONO
         'socialLinks': _socialsController.text.trim(),
         'dateFounded': _dateFounded != null ? Timestamp.fromDate(_dateFounded!) : null,
         'genres': _selectedGenres.toList(),
@@ -292,15 +289,20 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.backgroundDark,
-          // ✅ APP BAR CON FLECHA DE RETROCESO
+          // ✅ APP BAR CON LA MODIFICACIÓN CLAVE
           appBar: AppBar(
             backgroundColor: AppColors.backgroundDark,
             elevation: 0,
-            iconTheme: const IconThemeData(color: AppColors.textSecondary), // Color de la flecha
+            // 📌 CAMBIO CLAVE: Suprimir la flecha de retroceso
+            automaticallyImplyLeading: false,
             title: const Text(
                 'Editar Perfil de Banda',
                 style: TextStyle(color: AppColors.textWhite)
             ),
+            // Asegura que no haya un botón en actions que pueda causar confusión
+            actions: [
+              // Si necesitas un botón de cerrar, iría aquí
+            ],
           ),
           body: SingleChildScrollView(
             // Padding estático, el AppBar maneja el padding superior
@@ -335,7 +337,7 @@ class _BandProfileScreenState extends State<BandProfileScreen> {
                   controller: _phoneController,
                   labelText: 'Teléfono de Contacto',
                   icon: Icons.phone,
-                  keyboardType: TextInputType.phone, // Teclado optimizado
+                  keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 16),
                 CustomInputField(controller: _socialsController, labelText: 'Links Sociales (URL)', icon: Icons.link_outlined),

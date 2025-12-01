@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:toko/theme/AppColors.dart';
 import 'package:toko/widgets/CustomInputField.dart';
 import 'package:toko/widgets/SecondaryButton.dart';
@@ -30,13 +31,16 @@ class _CreateMatchPostScreenState extends State<CreateMatchPostScreen> {
   Set<String> _selectedGenres = {};
 
   bool _isLoading = false;
-  String _bandName = 'Cargando nombre...';
+  String _creatorName = 'Cargando nombre...'; // 📌 Cambiado de _bandName a _creatorName
 
   @override
   void initState() {
     super.initState();
+    // 📌 Lógica para cargar el nombre, sea de la banda o del usuario
     if (widget.isBandPost && widget.bandId != null) {
       _fetchBandName();
+    } else {
+      _fetchUserName(); // 📌 Cargar el nombre del músico
     }
   }
 
@@ -48,23 +52,44 @@ class _CreateMatchPostScreenState extends State<CreateMatchPostScreen> {
     super.dispose();
   }
 
-  // Obtiene el nombre de la banda para el título del post
+  // --- OBTENER NOMBRE DE BANDA ---
   Future<void> _fetchBandName() async {
     try {
       final doc = await FirebaseFirestore.instance.collection('bands').doc(widget.bandId).get();
       if (mounted) {
         setState(() {
-          _bandName = doc.data()?['name'] ?? 'Banda Desconocida';
+          _creatorName = doc.data()?['name'] ?? 'Banda Desconocida';
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _bandName = 'Error al cargar nombre';
+          _creatorName = 'Error al cargar nombre';
         });
       }
     }
   }
+
+  // --- OBTENER NOMBRE DE USUARIO (Músico) ---
+  Future<void> _fetchUserName() async {
+    try {
+      // Usar el UID para obtener el nombre del usuario desde la colección 'users'
+      final doc = await FirebaseFirestore.instance.collection('users').doc(widget.currentUserId).get();
+      if (mounted) {
+        // Se asume que el nombre está en el campo 'displayName'
+        setState(() {
+          _creatorName = doc.data()?['displayName'] ?? 'Músico Anónimo';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _creatorName = 'Error al cargar perfil';
+        });
+      }
+    }
+  }
+
 
   // --- LÓGICA DE CREACIÓN DE POST ---
   Future<void> _createPost() async {
@@ -81,7 +106,9 @@ class _CreateMatchPostScreenState extends State<CreateMatchPostScreen> {
       final newPost = {
         'type': postType,
         'creatorId': widget.isBandPost ? widget.bandId : widget.currentUserId,
-        'bandName': widget.isBandPost ? _bandName : null,
+        // 📌 CORRECCIÓN CLAVE: Usar _creatorName (que contiene el nombre del músico)
+        'name': _creatorName,
+        'bandName': widget.isBandPost ? _creatorName : null, // Solo guarda bandName si es búsqueda de banda
         'rolesNeeded': _rolesController.text.split(',').map((s) => s.trim()).toList(),
         'genres': _selectedGenres.toList(),
         'city': _cityController.text.trim(),
@@ -107,7 +134,8 @@ class _CreateMatchPostScreenState extends State<CreateMatchPostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.isBandPost ? 'Buscar Músicos para $_bandName' : 'Publicar mi Oferta de Músico';
+    // 📌 Usar _creatorName en el título para reflejar el perfil cargado
+    final title = widget.isBandPost ? 'Buscar Músicos para $_creatorName' : 'Publicar mi Oferta de Músico';
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
