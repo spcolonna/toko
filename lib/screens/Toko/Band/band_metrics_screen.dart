@@ -3,20 +3,27 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // 📌 Importación necesaria
 
 import 'package:toko/theme/AppColors.dart';
 
-// Constantes de diseño para la gráfica
+// Constantes
 const double chartBorderWidth = 0.5;
+const String rewardedInterstitialAdUnitId = 'ca-app-pub-9552343552775183/6647242359';
+const String kMetricsUnlockTimeKey = 'metricsUnlockTime'; // Clave para SharedPreferences
 
-// --- WIDGET AUXILIAR: Gráfica de Crecimiento ---
+// --- WIDGET AUXILIAR: Gráfica de Crecimiento (BandGrowthChart) ---
 class BandGrowthChart extends StatelessWidget {
   final String bandId;
   const BandGrowthChart({super.key, required this.bandId});
 
+  List<double> _generatePlaceholderData() {
+    return List<double>.generate(6, (i) => 100 + i * 50 + Random().nextDouble() * 20);
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Escuchar el historial de métricas de la banda (últimos 6 registros)
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('bands')
@@ -32,43 +39,33 @@ class BandGrowthChart extends StatelessWidget {
 
         final rawDocs = snapshot.data?.docs.reversed.toList() ?? [];
 
-        // Si no hay datos, mostrar mensaje
-        if (rawDocs.isEmpty) {
-          return Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.secondaryColor.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Center(
-              child: Text(
-                'No hay datos históricos disponibles para el gráfico.',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-            ),
-          );
-        }
-
-        // --- PREPARACIÓN DE DATOS REALES ---
-        final List<String> dates = rawDocs.map((doc) => DateFormat('MMM d').format(DateTime.parse(doc.id))).toList();
-
-        // ✅ CORRECCIÓN: Usamos List<double>.from() para asegurar el tipo.
-        final List<double> followers = List<double>.from(rawDocs.map((doc) {
+        final bool usePlaceholder = rawDocs.isEmpty;
+        final List<double> followers = usePlaceholder
+            ? _generatePlaceholderData()
+            : List<double>.from(rawDocs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
-          // Se asegura de que el valor sea un double, usando 0.0 si es nulo
           return (data['followers'] ?? 0.0).toDouble();
         }));
 
-        // Convertir a FlSpot para fl_chart
+        final List<String> dates = usePlaceholder
+            ? ['Mes 1', 'Mes 2', 'Mes 3', 'Mes 4', 'Mes 5', 'Mes 6']
+            : rawDocs.map((doc) {
+          try {
+            return DateFormat('MMM d').format(DateTime.parse(doc.id));
+          } catch (e) {
+            return 'N/A';
+          }
+        }).toList();
+
+        if (followers.length < 2) return const SizedBox.shrink();
+
         List<FlSpot> spots = followers.asMap().entries.map((entry) {
           return FlSpot(entry.key.toDouble(), entry.value);
         }).toList();
 
-        // Calcular el rango Y seguro
         final double minY = followers.isNotEmpty ? (followers.reduce(min) * 0.95).floorToDouble() : 0;
         final double maxY = followers.isNotEmpty ? (followers.reduce(max) * 1.05).ceilToDouble() : 100;
 
-        // --- RENDERIZADO DEL GRÁFICO (FlChart) ---
         return Container(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           decoration: BoxDecoration(
@@ -78,9 +75,9 @@ class BandGrowthChart extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Tendencia de Seguidores (Últimos 6 Registros)',
-                style: TextStyle(color: AppColors.textWhite, fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                usePlaceholder ? 'Tendencia Estimada (Datos Ficticios)' : 'Tendencia de Seguidores',
+                style: const TextStyle(color: AppColors.textWhite, fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               SizedBox(
@@ -88,37 +85,6 @@ class BandGrowthChart extends StatelessWidget {
                 width: double.infinity,
                 child: LineChart(
                   LineChartData(
-                    gridData: FlGridData(
-                      show: true, drawVerticalLine: false,
-                      horizontalInterval: (maxY - minY) / 4,
-                      getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.textSecondary, strokeWidth: 0.5),
-                    ),
-                    titlesData: FlTitlesData(
-                      show: true, rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)), topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true, reservedSize: 30, interval: 1,
-                          getTitlesWidget: (value, meta) {
-                            if (value.toInt() >= 0 && value.toInt() < dates.length) {
-                              return Padding(padding: const EdgeInsets.only(top: 8.0), child: Text(dates[value.toInt()], style: TextStyle(color: AppColors.textSecondary, fontSize: 10), textAlign: TextAlign.center));
-                            }
-                            return const Text('');
-                          },
-                        ),
-                      ),
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true, reservedSize: 40,
-                          getTitlesWidget: (value, meta) {
-                            return Text(value.toInt().toString(), style: TextStyle(color: AppColors.textSecondary, fontSize: 12), textAlign: TextAlign.left);
-                          },
-                          interval: (maxY - minY) / 4,
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: true, border: Border.all(color: AppColors.secondaryColor, width: chartBorderWidth)),
-                    minX: 0, maxX: dates.length - 1.toDouble(),
-                    minY: minY, maxY: maxY,
                     lineBarsData: [
                       LineChartBarData(
                         spots: spots, isCurved: true,
@@ -146,6 +112,24 @@ class BandGrowthChart extends StatelessWidget {
                       ),
                       handleBuiltInTouches: true,
                     ),
+                    minY: minY, maxY: maxY, minX: 0, maxX: dates.length - 1.toDouble(),
+                    borderData: FlBorderData(show: true, border: Border.all(color: AppColors.secondaryColor, width: chartBorderWidth)),
+                    gridData: FlGridData(
+                      show: true, drawVerticalLine: false, horizontalInterval: (maxY - minY) / 4,
+                      getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.textSecondary, strokeWidth: 0.5),
+                    ),
+                    titlesData: FlTitlesData(
+                      show: true, rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)), topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 30, interval: 1, getTitlesWidget: (value, meta) {
+                        if (value.toInt() >= 0 && value.toInt() < dates.length) {
+                          return Padding(padding: const EdgeInsets.only(top: 8.0), child: Text(dates[value.toInt()], style: TextStyle(color: AppColors.textSecondary, fontSize: 10), textAlign: TextAlign.center));
+                        }
+                        return const Text('');
+                      },),),
+                      leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 40, getTitlesWidget: (value, meta) {
+                        return Text(value.toInt().toString(), style: TextStyle(color: AppColors.textSecondary, fontSize: 12), textAlign: TextAlign.left);
+                      }, interval: (maxY - minY) / 4,),),
+                    ),
                   ),
                 ),
               ),
@@ -159,11 +143,126 @@ class BandGrowthChart extends StatelessWidget {
 
 
 // --- WIDGET PRINCIPAL BandMetricsScreen ---
-class BandMetricsScreen extends StatelessWidget {
+class BandMetricsScreen extends StatefulWidget {
   final String bandId;
   const BandMetricsScreen({super.key, required this.bandId});
 
-  // --- Widget para mostrar métricas individuales ---
+  @override
+  State<BandMetricsScreen> createState() => _BandMetricsScreenState();
+}
+
+class _BandMetricsScreenState extends State<BandMetricsScreen> {
+  // LÓGICA DE PUBLICIDAD
+  RewardedInterstitialAd? _rewardedInterstitialAd;
+  bool _isAdLoaded = false;
+
+  // ESTADO DE LA RECOMPENSA (Controlado por SharedPreferences)
+  bool _premiumMetricsUnlocked = false;
+  DateTime? _accessUnlockTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAndLoadUnlockStatus(); // 📌 CARGA EL ESTADO PERSISTENTE AL INICIO
+    _loadRewardedInterstitialAd();
+  }
+
+  @override
+  void dispose() {
+    _rewardedInterstitialAd?.dispose();
+    super.dispose();
+  }
+
+  // --- LÓGICA DE PERSISTENCIA (CARGA) ---
+  Future<void> _checkAndLoadUnlockStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final int? savedTimestamp = prefs.getInt(kMetricsUnlockTimeKey);
+
+    if (savedTimestamp != null) {
+      final savedTime = DateTime.fromMillisecondsSinceEpoch(savedTimestamp);
+
+      // 1. Si el tiempo aún no ha expirado, desbloquear y actualizar el estado
+      if (DateTime.now().isBefore(savedTime)) {
+        setState(() {
+          _accessUnlockTime = savedTime;
+          _premiumMetricsUnlocked = true;
+        });
+        return;
+      }
+
+      // 2. Si expiró, limpiar el valor
+      prefs.remove(kMetricsUnlockTimeKey);
+    }
+
+    // Asegurar el estado de bloqueo si no hay tiempo válido
+    setState(() {
+      _premiumMetricsUnlocked = false;
+    });
+  }
+
+  // --- LÓGICA DE PERSISTENCIA (GUARDADO) ---
+  Future<void> _saveUnlockTime(DateTime expirationTime) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(kMetricsUnlockTimeKey, expirationTime.millisecondsSinceEpoch);
+  }
+
+  void _loadRewardedInterstitialAd() {
+    // ... (Lógica de carga del anuncio se mantiene igual)
+    RewardedInterstitialAd.load(
+      adUnitId: rewardedInterstitialAdUnitId,
+      request: const AdRequest(),
+      rewardedInterstitialAdLoadCallback: RewardedInterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          _rewardedInterstitialAd = ad;
+          setState(() { _isAdLoaded = true; });
+
+          _rewardedInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              ad.dispose();
+              _loadRewardedInterstitialAd();
+            },
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              ad.dispose();
+              _loadRewardedInterstitialAd();
+            },
+          );
+        },
+        onAdFailedToLoad: (error) {
+          setState(() { _isAdLoaded = false; });
+        },
+      ),
+    );
+  }
+
+  void _showRewardedAd() {
+    if (_rewardedInterstitialAd == null || !_isAdLoaded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Anuncio aún no cargado. Intenta en un momento.')),
+      );
+      _loadRewardedInterstitialAd();
+      return;
+    }
+
+    _rewardedInterstitialAd!.show(onUserEarnedReward: (ad, reward) async {
+      // 1. Calcular el tiempo de expiración (24 horas)
+      final expirationTime = DateTime.now().add(const Duration(hours: 24));
+
+      // 2. GUARDAR EN SHARED PREFERENCES
+      await _saveUnlockTime(expirationTime);
+
+      // 3. Actualizar estado local (para forzar el redibujado inmediato)
+      setState(() {
+        _accessUnlockTime = expirationTime;
+        _premiumMetricsUnlocked = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('¡Métricas Premium desbloqueadas por 24h!')),
+      );
+    });
+  }
+
+
+  // --- Widget para mostrar métricas individuales (Se mantiene) ---
   Widget _buildMetricCard(String title, dynamic value, IconData icon) {
     return Card(
       color: AppColors.secondaryColor.withOpacity(0.3),
@@ -176,16 +275,9 @@ class BandMetricsScreen extends StatelessWidget {
           children: [
             Icon(icon, color: AppColors.primaryColor, size: 36),
             const SizedBox(height: 8),
-            Text(
-              value.toString(),
-              style: const TextStyle(color: AppColors.textWhite, fontSize: 28, fontWeight: FontWeight.bold),
-            ),
+            Text(value.toString(), style: const TextStyle(color: AppColors.textWhite, fontSize: 28, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-            ),
+            Text(title, textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
           ],
         ),
       ),
@@ -217,10 +309,23 @@ class BandMetricsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 📌 VERIFICACIÓN DE EXPIRACIÓN EN EL BUILD:
+    // Si el tiempo expiró mientras el widget estaba cargado, reseteamos el estado.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_accessUnlockTime != null && DateTime.now().isAfter(_accessUnlockTime!)) {
+        if (_premiumMetricsUnlocked) {
+          setState(() {
+            _premiumMetricsUnlocked = false; // Desbloqueo expirado
+            _accessUnlockTime = null;
+          });
+        }
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('bands').doc(bandId).snapshots(),
+        stream: FirebaseFirestore.instance.collection('bands').doc(widget.bandId).snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(AppColors.primaryColor)));
@@ -235,6 +340,36 @@ class BandMetricsScreen extends StatelessWidget {
           final likesCount = bandData['likesCount'] ?? 0;
           final postsCount = bandData['postsCount'] ?? 0;
 
+          // 📌 CONTENIDO DE BLOQUEO: Si el acceso no está desbloqueado
+          if (!_premiumMetricsUnlocked) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Card(
+                  color: AppColors.secondaryColor.withOpacity(0.5),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: const Icon(Icons.lock, color: AppColors.primaryColor, size: 36),
+                    title: const Text('Métricas de la Banda Bloqueadas', style: TextStyle(color: AppColors.textWhite, fontWeight: FontWeight.bold)),
+                    subtitle: Text(
+                        _isAdLoaded ? 'Para acceder a tus estadísticas, visualiza un anuncio.' : 'Cargando datos del anuncio...',
+                        style: TextStyle(color: AppColors.textSecondary)
+                    ),
+                    trailing: ElevatedButton(
+                      onPressed: _isAdLoaded ? _showRewardedAd : null,
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
+                      child: _isAdLoaded
+                          ? const Text('Ver Anuncio', style: TextStyle(color: AppColors.textWhite))
+                          : const Text('Cargando...', style: TextStyle(color: AppColors.textWhite)),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
+
+
+          // 📌 CONTENIDO DESBLOQUEADO: Se muestra si _premiumMetricsUnlocked es true
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -261,7 +396,7 @@ class BandMetricsScreen extends StatelessWidget {
 
                 // 2. Métricas de Vistas (FutureBuilder para cálculos pesados)
                 FutureBuilder<int>(
-                  future: _fetchTotalViews(bandId),
+                  future: _fetchTotalViews(widget.bandId),
                   builder: (context, viewsSnapshot) {
                     final views = viewsSnapshot.data ?? 0;
                     return GridView.count(
@@ -272,7 +407,7 @@ class BandMetricsScreen extends StatelessWidget {
 
                         // Métricas de Eventos (Interesados en toques)
                         FutureBuilder<int>(
-                          future: _fetchInterestedInShows(bandId),
+                          future: _fetchInterestedInShows(widget.bandId),
                           builder: (context, rsvpSnapshot) {
                             final rsvpCount = rsvpSnapshot.data ?? 0;
                             return _buildMetricCard('Interesados en Toques', rsvpCount, Icons.calendar_month);
@@ -285,8 +420,8 @@ class BandMetricsScreen extends StatelessWidget {
 
                 const SizedBox(height: 32),
 
-                // 3. 📈 GRÁFICO DE TENDENCIA (Implementación Real)
-                BandGrowthChart(bandId: bandId),
+                // 3. 📈 GRÁFICO DE TENDENCIA (Implementación Real/Ficticia)
+                BandGrowthChart(bandId: widget.bandId),
 
                 const SizedBox(height: 32),
               ],
