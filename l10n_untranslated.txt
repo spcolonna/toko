@@ -1,0 +1,17 @@
+{
+  "en": [
+    "contactEmailLabel",
+    "socialLinksLabel",
+    "dateFoundedLabel",
+    "dateFoundedPlaceholder",
+    "yourRoleLabel"
+  ],
+
+  "pt": [
+    "contactEmailLabel",
+    "socialLinksLabel",
+    "dateFoundedLabel",
+    "dateFoundedPlaceholder",
+    "yourRoleLabel"
+  ]
+}

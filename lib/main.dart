@@ -8,13 +8,25 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:toko/widgets/ad_banner_widget.dart';
-import 'package:toko/screens/WelcomeScreen.dart';
+import 'my_app.dart';
 
-import 'l10n/app_localizations.dart';
+// 📌 TUS IDS GLOBALES
+const String globalAdMobAppId = 'ca-app-pub-9552343552775183~1356877916';
+const String bannerAdUnitId = 'ca-app-pub-9552343552775183/8528790922';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 📌 DIAGNOSTICO: Imprimir el ID de la App
+  print('AdMob App ID (Global): $globalAdMobAppId');
+
+  // 📌 CONFIGURACIÓN DE DISPOSITIVOS DE PRUEBA (Para ver anuncios de prueba fiables)
+  // Revisa la documentación de Google Ads para obtener tu ID de dispositivo.
+  // RequestConfiguration configuration = RequestConfiguration(
+  //   testDeviceIds: ['YOUR_DEVICE_ID_HERE_FOR_TESTING'],
+  // );
+  // MobileAds.instance.updateRequestConfiguration(configuration);
+
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -35,58 +47,4 @@ void main() async {
       child: const MyApp(),
     ),
   );
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final remoteConfigService = RemoteConfigService.instance;
-    final bool showBannerAd = remoteConfigService.getBool('show_banner_ad');
-
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return Consumer<LocaleProvider>(
-          builder: (context, localeProvider, child) {
-            return MaterialApp(
-              title: 'Toko',
-              theme: ThemeData(
-                primarySwatch: Colors.blue,
-                primaryColor: themeProvider.theme.primaryColor,
-                appBarTheme: AppBarTheme(
-                  backgroundColor: themeProvider.theme.primaryColor,
-                  foregroundColor: Colors.white,
-                  titleTextStyle: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                floatingActionButtonTheme: FloatingActionButtonThemeData(
-                  backgroundColor: themeProvider.theme.accentColor,
-                ),
-              ),
-
-              // --- CAMBIO: Conectamos MaterialApp con el sistema de i18n ---
-              locale: localeProvider.locale, // 1. Usa el locale del provider
-              localizationsDelegates: AppLocalizations.localizationsDelegates, // 2. Usa los delegados generados
-              supportedLocales: AppLocalizations.supportedLocales, // 3. Usa los locales generados
-
-              home: const WelcomeScreen(),
-              builder: (context, navigator) {
-                return Column(
-                  children: [
-                    Expanded(child: navigator!),
-                    if (showBannerAd)
-                      const AdBannerWidget(),
-                  ],
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
 }
