@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:toko/theme/AppColors.dart';
 
+
 class CreateEventScreen extends StatefulWidget {
   final String bandId;
   const CreateEventScreen({super.key, required this.bandId});
@@ -14,9 +15,13 @@ class CreateEventScreen extends StatefulWidget {
 class _CreateEventScreenState extends State<CreateEventScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  final _venueController = TextEditingController();
+  final _venueController = TextEditingController(); // Venue is optional for posts
   final _descriptionController = TextEditingController();
   final _ticketLinkController = TextEditingController();
+
+  // --- CONTENT TYPE STATE ---
+  String _contentType = 'EVENT'; // Default to EVENT
+  final List<String> _contentTypes = ['EVENT', 'POST'];
 
   List<Map<String, dynamic>> _ticketList = [];
   DateTime? _selectedDateTime;
@@ -92,7 +97,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 }
               },
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
-              child: const Text('Guardar', style: TextStyle(color: AppColors.textWhite)),
+              child: const Text('Guardar', style: const TextStyle(color: AppColors.textWhite)),
             ),
           ],
         );
@@ -100,29 +105,51 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  Future<void> _createEvent() async {
+  // --- FUNCIÓN UNIFICADA DE SUBMISIÓN ---
+  Future<void> _submitContent() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedDateTime == null) { _showSnackBar('Selecciona la fecha y hora del evento.'); return; }
-    if (_ticketList.isEmpty) { _showSnackBar('Debes agregar al menos un tipo de entrada.'); return; }
+
+    // 1. VALIDACIÓN ESPECÍFICA DE EVENTOS
+    if (_contentType == 'EVENT') {
+      if (_selectedDateTime == null) { _showSnackBar('Selecciona la fecha y hora del evento.'); return; }
+      if (_ticketList.isEmpty) { _showSnackBar('Debes agregar al menos un tipo de entrada.'); return; }
+    }
 
     setState(() { _isSaving = true; });
 
     try {
-      final newEvent = {
+      final baseData = {
         'bandId': widget.bandId,
         'title': _titleController.text.trim(),
-        'date': Timestamp.fromDate(_selectedDateTime!),
-        'place': _venueController.text.trim(),
         'description': _descriptionController.text.trim(),
-        'ticketLink': _ticketLinkController.text.trim(),
-        'tickets': _ticketList,
+        'linkUrl': _ticketLinkController.text.trim(), // Reutilizamos para link
         'createdAt': FieldValue.serverTimestamp(),
-        'attendees': [],
       };
 
-      await FirebaseFirestore.instance.collection('events').add(newEvent);
-      _showSnackBar('🎉 Evento "${_titleController.text}" creado con éxito!');
+      if (_contentType == 'EVENT') {
+        // 2. CREACIÓN DE EVENTO
+        final newEvent = {
+          ...baseData,
+          'date': Timestamp.fromDate(_selectedDateTime!),
+          'place': _venueController.text.trim(),
+          'tickets': _ticketList,
+          'attendees': [],
+        };
+        await FirebaseFirestore.instance.collection('events').add(newEvent);
+        _showSnackBar('🎉 Evento creado con éxito!');
 
+      } else {
+        // 3. CREACIÓN DE POST GENERAL
+        final newPost = {
+          ...baseData,
+          'type': 'NEWS', // Asumo 'NEWS' como default para post general
+          // Place/Venue no son necesarios aquí
+        };
+        await FirebaseFirestore.instance.collection('band_posts').add(newPost);
+        _showSnackBar('🎉 Publicación de banda creada con éxito!');
+      }
+
+      // Limpiar formulario después de guardar
       _titleController.clear(); _venueController.clear(); _descriptionController.clear(); _ticketLinkController.clear();
       setState(() { _selectedDateTime = null; _ticketList = []; });
 
@@ -131,7 +158,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       }
 
     } catch (e) {
-      _showSnackBar('🚨 Error al crear el evento: Asegura tus reglas de seguridad. $e');
+      _showSnackBar('🚨 Error al crear contenido: $e');
     } finally {
       setState(() { _isSaving = false; });
     }
@@ -141,24 +168,25 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     if (mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message))); }
   }
 
+  // WIDGET AUXILIAR: Campo de Texto Estilizado (Formulario)
   Widget _buildTextField({
     required TextEditingController controller, required String labelText, required IconData icon,
     TextInputType keyboardType = TextInputType.text, int maxLines = 1, String? Function(String?)? validator,
   }) {
+    // NOTE: Reemplaza con tu CustomInputField real
     return TextFormField(
       controller: controller, keyboardType: keyboardType, maxLines: maxLines,
       style: const TextStyle(color: AppColors.textWhite),
       decoration: InputDecoration(
         labelText: labelText, labelStyle: TextStyle(color: AppColors.textSecondary),
         prefixIcon: Icon(icon, color: AppColors.primaryColor), filled: true,
-        fillColor: AppColors.secondaryColor.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.primaryColor, width: 2)),
+        fillColor: AppColors.secondaryColor.withOpacity(0.2),
       ),
       validator: validator ?? (value) => (value == null || value.isEmpty) ? 'Este campo es obligatorio.' : null,
     );
   }
 
+  // WIDGET AUXILIAR: Selector de Fecha/Hora
   Widget _buildDateTimeSelector() {
     final String displayDate = _selectedDateTime == null ? 'Seleccionar Fecha y Hora' : DateFormat('EEE, d MMM yyyy - h:mm a', 'es').format(_selectedDateTime!);
     return InkWell(
@@ -175,6 +203,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
+  // WIDGET AUXILIAR: Listado de Precios
   Widget _buildTicketList() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,11 +211,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         const Text('Tipos de Entrada y Precios', style: TextStyle(color: AppColors.textWhite, fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Wrap(
-          spacing: 8.0,
-          runSpacing: 4.0,
+          spacing: 8.0, runSpacing: 4.0,
           children: _ticketList.asMap().entries.map((entry) {
             final index = entry.key;
             final ticket = entry.value;
+            // NOTE: Reemplaza con tu ActionChip real
             return ActionChip(
               backgroundColor: AppColors.secondaryColor.withOpacity(0.5),
               label: Text('${ticket['name']} - \$${ticket['value'].toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textWhite)),
@@ -198,7 +227,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         TextButton.icon(
           onPressed: () => _showTicketDialog(),
           icon: const Icon(Icons.add_circle, color: AppColors.primaryColor),
-          label: const Text('Agregar Otro Precio', style: TextStyle(color: AppColors.primaryColor)),
+          label: const Text('Agregar Otro Precio', style: const TextStyle(color: AppColors.primaryColor)),
         ),
       ],
     );
@@ -206,10 +235,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isEvent = _contentType == 'EVENT';
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
-        title: const Text('Crear Nuevo Evento', style: TextStyle(color: AppColors.textWhite)),
+        title: Text(isEvent ? 'Crear Nuevo Evento' : 'Crear Nueva Publicación', style: const TextStyle(color: AppColors.textWhite)),
         backgroundColor: AppColors.backgroundDark,
         iconTheme: const IconThemeData(color: AppColors.textWhite),
         elevation: 0,
@@ -221,20 +252,57 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              _buildTextField(controller: _titleController, labelText: 'Título del Evento', icon: Icons.subtitles),
+              // --- 1. SELECTOR DE TIPO ---
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Tipo de Contenido',
+                  prefixIcon: const Icon(Icons.create, color: AppColors.primaryColor),
+                  filled: true, fillColor: AppColors.secondaryColor.withOpacity(0.2),
+                ),
+                dropdownColor: AppColors.backgroundDark,
+                style: const TextStyle(color: AppColors.textWhite),
+                value: _contentType,
+                items: _contentTypes.map((type) => DropdownMenuItem(
+                    value: type,
+                    child: Text(type == 'EVENT' ? 'Evento/Toque' : 'Noticia/Post General', style: const TextStyle(color: AppColors.textWhite)))).toList(),
+                onChanged: (value) { setState(() {
+                  _contentType = value ?? 'EVENT';
+                  // Reset fields specific to the other type when switching
+                  _selectedDateTime = null;
+                  _ticketList = [];
+                }); },
+              ),
+              const SizedBox(height: 24),
+
+              // --- 2. CAMPOS COMUNES ---
+              _buildTextField(controller: _titleController, labelText: 'Título', icon: Icons.subtitles),
               const SizedBox(height: 16),
-              _buildDateTimeSelector(),
+              _buildTextField(controller: _descriptionController, labelText: 'Descripción/Cuerpo', icon: Icons.notes, maxLines: 4),
               const SizedBox(height: 16),
-              _buildTextField(controller: _venueController, labelText: 'Lugar / Recinto', icon: Icons.location_on),
-              const SizedBox(height: 16),
-              _buildTextField(controller: _descriptionController, labelText: 'Descripción del Evento', icon: Icons.notes, maxLines: 4),
-              const SizedBox(height: 16),
-              _buildTicketList(),
-              const SizedBox(height: 16),
-              _buildTextField(controller: _ticketLinkController, labelText: 'Enlace de Compra de Tickets (opcional)', icon: Icons.link, keyboardType: TextInputType.url, validator: (value) => null),
+
+              // --- 3. CAMPOS CONDICIONALES (EVENTOS) ---
+              if (isEvent) ...[
+                _buildDateTimeSelector(),
+                const SizedBox(height: 16),
+                _buildTextField(controller: _venueController, labelText: 'Lugar / Recinto', icon: Icons.location_on),
+                const SizedBox(height: 16),
+                _buildTicketList(),
+                const SizedBox(height: 16),
+              ],
+
+              // Enlace (Útil para ambos: tickets o noticia)
+              _buildTextField(
+                controller: _ticketLinkController,
+                labelText: isEvent ? 'Enlace de Compra de Tickets (opcional)' : 'Enlace de Noticia/Tema Nuevo (opcional)',
+                icon: Icons.link,
+                keyboardType: TextInputType.url,
+                validator: (value) => null,
+              ),
               const SizedBox(height: 32),
+
+              // --- BOTÓN DE CREACIÓN ---
               ElevatedButton(
-                onPressed: _isSaving ? null : _createEvent,
+                onPressed: _isSaving ? null : _submitContent,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -242,7 +310,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ),
                 child: _isSaving
                     ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(AppColors.textWhite))
-                    : const Text('Crear Evento', style: TextStyle(fontSize: 18, color: AppColors.textWhite)),
+                    : Text(isEvent ? 'Crear Evento' : 'Crear Publicación', style: const TextStyle(fontSize: 18, color: AppColors.textWhite)),
               ),
             ],
           ),

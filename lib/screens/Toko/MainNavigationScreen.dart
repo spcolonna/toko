@@ -24,12 +24,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
 
   // 1. Definir la lista de Widgets con el Hub de Gestión en el índice 4
-  final List<Widget> _widgetOptions = const <Widget>[
+  final List<Widget> _widgetOptions = <Widget>[
     EventScreen(),
-    BandsScreen(),
-    MyScheduleScreen(),
-    MatchScreen(),
-    ManagementDecisorScreen(), // 📌 Este es el HUB de opciones (Perfil de Músico / Administración de Banda)
+    const BandsScreen(),
+    const MyScheduleScreen(),
+    const MatchScreen(),
+    const ManagementDecisorScreen(), // 📌 Este es el HUB de opciones (Perfil de Músico / Administración de Banda)
   ];
 
   // 2. Simplificar la función de tap para solo actualizar el índice

@@ -6,42 +6,34 @@ import 'package:intl/intl.dart';
 
 import 'package:toko/theme/AppColors.dart';
 
-// Definición de la pantalla
+import '../Entities/member_details.dart';
+import '../Entities/member_profile_tile.dart';
+
 class BandPublicProfileScreen extends StatelessWidget {
   final String bandId;
 
-  // ❌ ANTES: const FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  // ✅ AHORA: SIN 'const'
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ❌ ANTES: const BandPublicProfileScreen({super.key, required this.bandId});
-  // ✅ AHORA: SIN 'const' en el constructor
-  BandPublicProfileScreen({super.key, required this.bandId}); // <-- EL CAMBIO CLAVE
+  BandPublicProfileScreen({super.key, required this.bandId});
 
   // --- LÓGICA DE INTERACCIÓN (Transacción Atómica y Segura) ---
   Future<void> _updateMetric(String bandId, String metricField, bool shouldIncrement) async {
     final bandRef = _firestore.collection('bands').doc(bandId);
     final user = FirebaseAuth.instance.currentUser;
-
     if (user == null) return;
 
     await _firestore.runTransaction((transaction) async {
       final bandSnapshot = await transaction.get(bandRef);
-      if (!bandSnapshot.exists) {
-        throw Exception("Band does not exist!");
-      }
+      if (!bandSnapshot.exists) { throw Exception("Band does not exist!"); }
 
       final userRef = _firestore.collection('users').doc(user.uid);
       final userSnapshot = await transaction.get(userRef);
 
       final listFieldName = metricField == 'followersCount' ? 'followingBands' : 'likedBands';
       final List<String> currentList = List<String>.from(userSnapshot.data()?[listFieldName] ?? []);
-
       final bool alreadyExists = currentList.contains(bandId);
 
-      if (shouldIncrement == alreadyExists) {
-        return;
-      }
+      if (shouldIncrement == alreadyExists) return;
 
       final currentCount = bandSnapshot.data()?[metricField] ?? 0;
       final newCount = shouldIncrement ? currentCount + 1 : max(0, currentCount - 1);
@@ -49,28 +41,71 @@ class BandPublicProfileScreen extends StatelessWidget {
       transaction.update(bandRef, {metricField: newCount});
 
       if (shouldIncrement) {
-        transaction.update(userRef, {
-          listFieldName: FieldValue.arrayUnion([bandId])
-        });
+        transaction.update(userRef, {listFieldName: FieldValue.arrayUnion([bandId])});
       } else {
-        transaction.update(userRef, {
-          listFieldName: FieldValue.arrayRemove([bandId])
-        });
+        transaction.update(userRef, {listFieldName: FieldValue.arrayRemove([bandId])});
       }
     });
   }
 
-  void _toggleFollow(String bandId, bool isFollowing) {
-    _updateMetric(bandId, 'followersCount', !isFollowing);
+  void _toggleFollow(String bandId, bool isFollowing) { _updateMetric(bandId, 'followersCount', !isFollowing); }
+  void _toggleLike(String bandId, bool isLiked) { _updateMetric(bandId, 'likesCount', !isLiked); }
+
+  // --- FUNCIÓN CLAVE: FUNCIÓN PARA COMBINAR DATOS DE MIEMBROS ---
+  Future<List<MemberDetails>> _fetchMembersDetails(String bandId) async {
+    final List<MemberDetails> allMembers = [];
+    final bandDoc = await _firestore.collection('bands').doc(bandId).get();
+    final bandData = bandDoc.data();
+    final tokouserMembers = bandData?['members'] as Map<String, dynamic>? ?? {};
+
+    // CONSULTA A MIEMBROS TOKO (USERS COLLECTION)
+    if (tokouserMembers.isNotEmpty) {
+      final List<String> memberUids = tokouserMembers.keys.toList();
+      final usersSnapshot = await _firestore.collection('users').where(FieldPath.documentId, whereIn: memberUids).get();
+
+      for (var doc in usersSnapshot.docs) {
+        final userData = doc.data();
+        final role = tokouserMembers[doc.id]?['role'] ?? 'Músico';
+        final Timestamp? birthTimestamp = userData?['birthDate']; // Buscamos la fecha de nacimiento en users
+
+        allMembers.add(MemberDetails(
+          id: doc.id,
+          name: userData?['displayName'] ?? 'Usuario Toko',
+          role: role,
+          photoUrl: userData?['photoUrl'],
+          bio: userData?['musicianBio'] ?? 'Bio no especificada.',
+          isTokoUser: true,
+          birthDate: birthTimestamp?.toDate(), // 📌 PASAMOS LA FECHA DE NACIMIENTO
+        ));
+      }
+    }
+
+    // CONSULTA A MIEMBROS EXTERNOS (SUBCOLECCIÓN)
+    final externalMembersSnapshot = await _firestore
+        .collection('bands')
+        .doc(bandId)
+        .collection('externalMembers')
+        .get();
+
+    for (var doc in externalMembersSnapshot.docs) {
+      final externalData = doc.data();
+      final Timestamp? birthTimestamp = externalData?['birthDate']; // Buscamos la fecha de nacimiento en externalMembers
+
+      allMembers.add(MemberDetails(
+        id: doc.id,
+        name: externalData?['name'] ?? 'Músico Externo',
+        role: externalData?['bandRole'] ?? 'Músico',
+        photoUrl: externalData?['photoUrl'],
+        bio: externalData?['artistBio'] ?? 'Bio no especificada.',
+        isTokoUser: false,
+        birthDate: birthTimestamp?.toDate(), // 📌 PASAMOS LA FECHA DE NACIMIENTO
+      ));
+    }
+
+    return allMembers;
   }
 
-  void _toggleLike(String bandId, bool isLiked) {
-    _updateMetric(bandId, 'likesCount', !isLiked);
-  }
-  // ----------------------------------------------
-
-
-  // --- WIDGET AUXILIAR: Tarjeta de Próximo Evento ---
+  // --- WIDGET AUXILIAR: Tarjeta de Próximo Evento (Se mantiene) ---
   Widget _buildEventCard(BuildContext context, Map<String, dynamic> eventData) {
     final Timestamp timestamp = eventData['date'] as Timestamp;
     final DateTime eventDate = timestamp.toDate();
@@ -112,6 +147,8 @@ class BandPublicProfileScreen extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return const Center(child: Text('Login Required', style: TextStyle(color: AppColors.textWhite)));
 
+    final String currentUserId = user.uid;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
@@ -139,7 +176,7 @@ class BandPublicProfileScreen extends StatelessWidget {
           final bandGenres = List<String>.from(bandData['genres'] ?? []);
 
           return StreamBuilder<DocumentSnapshot>(
-              stream: _firestore.collection('users').doc(user.uid).snapshots(),
+              stream: _firestore.collection('users').doc(currentUserId).snapshots(),
               builder: (context, userSnapshot) {
                 final userData = userSnapshot.data?.data() as Map<String, dynamic>? ?? {};
                 final List<String> likedBands = List<String>.from(userData['likedBands'] ?? []);
@@ -180,7 +217,6 @@ class BandPublicProfileScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          // Botón ME GUSTA
                           Column(
                             children: [
                               IconButton(
@@ -191,7 +227,6 @@ class BandPublicProfileScreen extends StatelessWidget {
                               Text('$likesCount Likes', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
                             ],
                           ),
-                          // Botón SEGUIR
                           Column(
                             children: [
                               IconButton(
@@ -246,10 +281,31 @@ class BandPublicProfileScreen extends StatelessWidget {
                       ),
                       const Divider(height: 40, color: AppColors.secondaryColor),
 
-                      // --- 5. INTEGRANTES (Placeholder) ---
-                      const Text('Integrantes', style: TextStyle(color: AppColors.textWhite, fontSize: 20, fontWeight: FontWeight.bold)),
+                      // --- 5. INTEGRANTES (IMPLEMENTACIÓN FINAL) ---
+                      const Text('Integrantes de la Banda', style: TextStyle(color: AppColors.textWhite, fontSize: 20, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 12),
-                      Text('Integrantes listados aquí: (Total de miembros: ${(bandData['members'] as Map?)?.length ?? 0} Toko + Externos)', style: TextStyle(color: AppColors.textSecondary)),
+
+                      FutureBuilder<List<MemberDetails>>(
+                        future: _fetchMembersDetails(bandId),
+                        builder: (context, memberSnapshot) {
+                          if (memberSnapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(AppColors.primaryColor)));
+                          }
+                          if (!memberSnapshot.hasData || memberSnapshot.data!.isEmpty) {
+                            return Text('No hay miembros registrados.', style: TextStyle(color: AppColors.textSecondary));
+                          }
+
+                          final members = memberSnapshot.data!;
+
+                          return Column(
+                            children: members.map((member) {
+                              return MemberProfileTile(
+                                member: member,
+                              );
+                            }).toList().cast<Widget>(),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 );
